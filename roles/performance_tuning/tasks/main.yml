@@ -1,0 +1,27 @@
+---
+- name: Disable automatic page file
+  win_pagefile:
+    automatic: false
+  when: page_file_size != 'auto'
+
+- name: Configure page file
+  vars:
+    disable_page_file: "{{ true if page_file_size == 'disabled' else false }}"
+    static_page_file: "{{ true if page_file_size != 'auto' and page_file_size != 'disabled' else false }}"
+    page_file_state: "{{ 'query' if page_file_size == 'auto' else 'present' }}"
+  win_pagefile:
+    drive: "{{ page_file_disk if static_page_file else omit }}"
+    automatic: "{{ true if page_file_size == 'auto' else false }}"
+    remove_all: "{{ true if disable_page_file else false }}"
+    override: "{{ false if static_page_file else omit }}"
+    initial_size: "{{ page_file_size|int if static_page_file else omit }}"
+    maximum_size: "{{ page_file_size|int if static_page_file else omit }}"
+    state: "{{ 'absent' if disable_page_file else page_file_state }}"
+  register: page_file_config
+
+- name: Reboot system
+  win_reboot:
+    pre_reboot_delay: 0
+    reboot_timeout: 600
+    msg: "Reboot after configuring page file"
+  when: page_file_config is changed

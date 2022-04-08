@@ -1,0 +1,17 @@
+---
+- name: Check services to configure
+  ansible.windows.win_service_info:
+    name: "{{ item.name }}"
+  register: configure_services
+  loop: "{{ service_recovery_options | select() }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configure service recovery options
+  win_service:
+    name: "{{ item.item.name }}"
+    failure_actions: "{{ item.item.actions }}"
+  loop: "{{ configure_services.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: item.exists

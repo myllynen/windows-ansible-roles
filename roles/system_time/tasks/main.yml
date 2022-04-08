@@ -1,0 +1,16 @@
+---
+- name: Configure time zone
+  win_timezone:
+    timezone: "{{ system_time_timezone }}"
+
+- name: Configure time sync
+  win_regedit:
+    path: HKLM:\System\CurrentControlSet\Services\W32Time\Parameters
+    name: NtpServer
+    type: string
+    data: "{{ system_time_ntp_servers | join(' ') }}"
+  register: ntp_config
+
+- name: Apply time sync configuration change
+  win_command: w32tm /config /update
+  when: ntp_config is changed

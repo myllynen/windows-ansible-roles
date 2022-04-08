@@ -1,0 +1,3 @@
+---
+winrm_configuration_start_mode: delayed
+winrm_configuration_display_config: false

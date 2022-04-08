@@ -1,0 +1,25 @@
+---
+- name: Check current keyboard language
+  ansible.windows.win_powershell:
+    script: (Get-WinUserLanguageList).LanguageTag
+  register: language_tag
+  changed_when: false
+
+- name: Configure keyboard language
+  ansible.windows.win_powershell:
+    script: Set-WinUserLanguageList {{ system_locale_keyboard }} -Force
+  when: language_tag.output[0][:2] != system_locale_keyboard[:2]
+
+- name: Configure system region
+  win_region:
+    location: "{{ system_locale_location_code }}"
+    format: "{{ system_locale_language_format }}"
+    unicode_language: "{{ system_locale_unicode_language }}"
+    copy_settings: "{{ system_locale_apply_new_users|bool }}"
+  register: region_config
+
+- name: Reboot system
+  win_reboot:
+    pre_reboot_delay: 0
+    reboot_timeout: 600
+  when: region_config.restart_required

@@ -1,0 +1,16 @@
+---
+- name: Join AD domain
+  dns_domain_name: "{{ domain_name }}"
+  hostname: "{{ ansible_facts.hostname }}"
+  domain_admin_user: "{{ domain_username }}"
+  domain_admin_password: "{{ domain_password }}"
+  domain_ou_path: "{{ domain_ou }}"
+  state: domain
+  register: domain_state
+
+- name: Reboot system
+  win_reboot:
+    pre_reboot_delay: 0
+    reboot_timeout: 600
+    msg: "Reboot after joining domain"
+  when: domain_state.reboot_required

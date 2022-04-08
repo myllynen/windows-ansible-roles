@@ -1,0 +1,8 @@
+---
+system_locale_keyboard: en-US
+# https://docs.microsoft.com/windows/win32/intl/table-of-geographical-locations
+system_locale_location_code: 39070
+system_locale_language_format: en-US
+system_locale_unicode_language: en-US
+# Copy changed values to new users and welcome screen
+system_locale_apply_new_users: true

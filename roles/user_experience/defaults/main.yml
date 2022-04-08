@@ -1,0 +1,5 @@
+---
+# DoNotOpenServerManagerAtLogon
+user_experience_server_manager_disable: true
+# Disable network location wizard
+user_experience_network_location_wizard_disable: true

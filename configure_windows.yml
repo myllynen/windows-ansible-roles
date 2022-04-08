@@ -1,0 +1,146 @@
+---
+- name: Configure Windows systems
+  hosts: all
+  become: false
+  vars:
+    #
+    # Ansible WinRM configuration
+    #
+    ansible_connection: winrm
+    ansible_winrm_port: 5985
+    ansible_winrm_user: winrm
+    ansible_winrm_password: foobar
+    ansible_winrm_transport: basic
+    ansible_winrm_scheme: http
+    ansible_become_method: runas
+
+    #
+    # accounts_local
+    #
+    # Enable or disable built-in Administrator
+    accounts_local_administrator_disable: true
+
+    #
+    # boot_configuration
+    #
+    boot_configuration_timeout: 5
+
+    #
+    # domain_join
+    #
+    # These should come from vault
+    #domain_username:
+    #domain_password:
+    domain_name: example.com
+    domain_ou: OU=Servers,DC=example,DC=com
+
+    #
+    # dotnet_optimize
+    #
+    # Compile PowerShell assemblies
+    dotnet_optimize_powershell: true
+
+    # Compile all assemblies as needed
+    dotnet_optimize_all_assemblies: false
+
+    # Force recompiling all assemblies
+    dotnet_optimize_force_recompile: false
+
+
+    #
+    # network_configuration
+    #
+    network_configuration_ipv6_disable: true
+
+    #
+    # performance_tuning
+    #
+    # Page file size configuration
+    # auto - automatically managed
+    # disabled - page file disabled
+    # size - static page file size in MB
+    page_file_size: auto
+    page_file_disk: C
+
+    #
+    # rdp_configuration
+    #
+    # Enable or disable RDP
+    rdp_configuration_enable: true
+
+    # Require authentication for RDP
+    rdp_configuration_authenticate: true
+
+    #
+    # services_enablement
+    #
+    service_enablement_disable:
+      - WbioSrvc
+
+    service_enablement_enable:
+
+    #
+    # service_recovery_options
+    #
+    service_recovery_options:
+      - name: SNMPTRAP
+        actions:
+          - delay_ms: 30000
+            type: restart
+          - delay_ms: 30000
+            type: restart
+          - delay_ms: 60000
+            type: reboot
+
+    #
+    # system_locale
+    #
+    system_locale_keyboard: fi-FI
+    # https://docs.microsoft.com/windows/win32/intl/table-of-geographical-locations
+    system_locale_location_code: 39070
+    system_locale_language_format: en-US
+    system_locale_unicode_language: en-US
+    # Copy changed values to new users and welcome screen
+    system_locale_apply_new_users: true
+
+    #
+    # system_time
+    #
+    system_time_timezone: FLE Standard Time
+    system_time_ntp_servers:
+        - time.windows.com
+
+    #
+    # system_update
+    #
+    system_update_reboot_timeout: 1200
+
+    #
+    # user_experience
+    #
+    # DoNotOpenServerManagerAtLogon
+    user_experience_server_manager_disable: true
+    # Disable network location wizard
+    user_experience_network_location_wizard_disable: true
+
+    #
+    # winrm_configuration
+    #
+    winrm_configuration_start_mode: delayed
+    winrm_configuration_display_config: false
+
+  roles:
+    - system_time
+    - system_locale
+    #- domain_join
+    - accounts_local
+    - boot_configuration
+    - network_configuration
+    - winrm_configuration
+    - rdp_configuration
+    #- system_update
+    - dotnet_optimize
+    - performance_tuning
+    - service_enablement
+    - service_recovery
+    - user_experience

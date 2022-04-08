@@ -1,0 +1,45 @@
+---
+- name: Configure RDP user authentication
+  win_regedit:
+    path: HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-TCP
+    name: UserAuthentication
+    type: dword
+    data: "{{ 1 if rdp_configuration_authenticate|bool else 0 }}"
+
+- name: Enable RDP service
+  win_regedit:
+    path: HKLM:\System\CurrentControlSet\Control\Terminal Server
+    name: fDenyTSConnections
+    type: dword
+    data: 0
+  when: rdp_configuration_enable | bool
+
+- name: Allow firewall RDP port
+  win_firewall_rule:
+    name: Remote Desktop
+    localport: 3389
+    action: allow
+    direction: in
+    protocol: tcp
+    state: present
+    enabled: true
+  when: rdp_configuration_enable | bool
+
+- name: Disable RDP service
+  win_regedit:
+    path: HKLM:\System\CurrentControlSet\Control\Terminal Server
+    name: fDenyTSConnections
+    type: dword
+    data: 1
+  when: not rdp_configuration_enable | bool
+
+- name: Block firewall RDP port
+  win_firewall_rule:
+    name: Remote Desktop
+    localport: 3389
+    action: block
+    direction: in
+    protocol: tcp
+    state: present
+    enabled: true
+  when: not rdp_configuration_enable | bool

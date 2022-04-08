@@ -1,0 +1,10 @@
+---
+service_recovery_options:
+  - name: SNMPTRAP
+    actions:
+      - delay_ms: 30000
+        type: restart
+      - delay_ms: 30000
+        type: restart
+      - delay_ms: 60000
+        type: reboot

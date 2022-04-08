@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2022 Marko Myllynen <myllynen@redhat.com>
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+---
+galaxy_info:
+  author: Marko Myllynen <myllynen@redhat.com>
+  description: Ansible roles for Windows configuration.
+  company: Red Hat, Inc.
+
+  issue_tracker_url: https://github.com/myllynen/windows-ansible-roles/issues
+
+  license: GPLv2+
+
+  min_ansible_version: 2.11
+
+  platforms:
+    - name: Windows
+      versions:
+        - 2019
+        - 2022
+
+  galaxy_tags:
+    - configuration
+    - windows
+
+dependencies: []

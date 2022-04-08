@@ -1,0 +1,3 @@
+---
+# Enable or disable built-in Administrator
+accounts_local_administrator_disable: true

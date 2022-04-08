@@ -1,0 +1,32 @@
+---
+- name: Check services to disable
+  ansible.windows.win_service_info:
+    name: "{{ item }}"
+  register: disable_services
+  loop: "{{ service_enablement_disable | select() }}"
+
+- name: Disable unwanted services
+  win_service:
+    name: "{{ item.item }}"
+    start_mode: disabled
+    state: stopped
+  loop: "{{ disable_services.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.exists
+
+- name: Check services to enable
+  ansible.windows.win_service_info:
+    name: "{{ item }}"
+  register: enable_services
+  loop: "{{ service_enablement_enable | select() }}"
+
+- name: Enable wanted services
+  win_service:
+    name: "{{ item.item }}"
+    start_mode: auto
+    state: started
+  loop: "{{ enable_services.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.exists

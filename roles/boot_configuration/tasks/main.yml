@@ -1,0 +1,9 @@
+---
+- name: Check current boot configuration
+  win_command: bcdedit
+  register: bcdedit_output
+  changed_when: false
+
+- name: Configure boot timeout
+  win_command: bcdedit /timeout {{ boot_configuration_timeout }}
+  when: not bcdedit_output.stdout | regex_search('timeout \\s+ ' + boot_configuration_timeout|string +'\\r\\n')
