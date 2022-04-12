@@ -95,20 +95,23 @@
     #
     # system_locale
     #
-    system_locale_keyboard: fi-FI
+    # NB. Configuring keyboard for Welcome Screen is notoriously difficult, this
+    # role may or may not work reliably and may need more than round to apply ok
+
     # https://docs.microsoft.com/windows/win32/intl/table-of-geographical-locations
-    system_locale_location_code: 77
-    system_locale_language_format: en-US
-    system_locale_unicode_language: en-US
-    # Copy changed values to new users and welcome screen
-    system_locale_apply_new_users: true
+    system_locale_location: 77
+
+    system_locale_system: en-US
+    system_locale_ui: en-US
+    system_locale_user: fi-FI
+    system_locale_input: fi-FI
 
     #
     # system_time
     #
     system_time_timezone: FLE Standard Time
     system_time_ntp_servers:
-        - time.windows.com
+      - time.windows.com
 
     #
     # system_update
@@ -122,6 +125,12 @@
     user_experience_server_manager_disable: true
     # Disable network location wizard
     user_experience_network_location_wizard_disable: true
+
+    #
+    # windows_recovery
+    #
+    # Enable or disable Windows Recovery Environment
+    windows_recovery_disable: true
 
     #
     # winrm_configuration
@@ -140,6 +149,7 @@
     - rdp_configuration
     #- system_update
     - dotnet_optimize
+    - windows_recovery
     - performance_tuning
     - service_enablement
     - service_recovery
