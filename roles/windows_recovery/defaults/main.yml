@@ -1,0 +1,3 @@
+---
+# Enable or disable Windows Recovery Environment
+windows_recovery_disable: true
