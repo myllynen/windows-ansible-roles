@@ -28,7 +28,9 @@
 
 - name: Check WinRM service configuration
   ansible.windows.win_powershell:
-    script: winrm get winrm/config
+    error_action: stop
+    script: |
+      winrm get winrm/config
   register: winrm_config_info
   changed_when: false
   when: winrm_configuration_display_config | bool

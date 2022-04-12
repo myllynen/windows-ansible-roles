@@ -1,6 +1,7 @@
 ---
 - name: Compile PowerShell assemblies
   ansible.windows.win_powershell:
+    error_action: continue
     script: |
       # From https://docs.ansible.com/ansible/latest/user_guide/windows_performance.html
       $env:path = [Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
@@ -20,6 +21,7 @@
   vars:
     force_flag: "{{ '/force' if dotnet_optimize_force_recompile|bool else '' }}"
   ansible.windows.win_powershell:
+    error_action: continue
     script: |
       $env:path = [Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
       ngen update {{ force_flag }} /nologo `
