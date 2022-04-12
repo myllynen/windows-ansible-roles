@@ -1,15 +1,24 @@
 ---
-- name: Configure time zone
+- name: Configure timezone
   win_timezone:
     timezone: "{{ system_time_timezone }}"
+  register: timezone_config
+
+- name: Reboot system
+  win_reboot:
+    pre_reboot_delay: 0
+    reboot_timeout: 600
+    msg: "Reboot after configuring timezone"
+  when: timezone_config is changed
 
 - name: Configure time sync
   win_regedit:
     path: HKLM:\System\CurrentControlSet\Services\W32Time\Parameters
     name: NtpServer
     type: string
-    data: "{{ system_time_ntp_servers | join(' ') }}"
+    data: "{{ system_time_ntp_servers | join(',0x8 ') + ',0x8' }}"
   register: ntp_config
+  when: "system_time_ntp_servers | type_debug == 'list'"
 
 - name: Apply time sync configuration change
   win_command: w32tm /config /update
