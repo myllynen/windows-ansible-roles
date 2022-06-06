@@ -26,7 +26,7 @@ See also
 [https://github.com/myllynen/ansible-packer](https://github.com/myllynen/ansible-packer).
 
 See also
-[https://github.com/myllynen/rhel-ansible-roles/](https://github.com/myllynen/rhel-ansible-roles/).
+[https://github.com/myllynen/rhel-ansible-roles](https://github.com/myllynen/rhel-ansible-roles).
 
 ## License
 
