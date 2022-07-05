@@ -141,7 +141,7 @@
   roles:
     - system_time
     - system_locale
-    #- domain_join
+    #- { role: domain_join, when: domain_username is defined }
     - accounts_local
     - boot_configuration
     - network_configuration
