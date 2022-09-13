@@ -1,0 +1,18 @@
+namespace: myllynen
+name: windows_ansible_roles
+version: "0.1.0"
+readme: README.md
+authors:
+  - Marko Myllynen <myllynen@redhat.com>
+description: >
+  Ansible roles for Windows configuration.
+license:
+  - GPL-3.0-or-later
+tags:
+  - configuration
+  - windows
+dependencies:
+  ansible.windows: ">=1.11.0"
+  community.windows: ">=1.11.0"
+repository: https://www.github.com/myllynen/windows-ansible-roles
+issues: https://www.github.com/myllynen/windows-ansible-roles/issues

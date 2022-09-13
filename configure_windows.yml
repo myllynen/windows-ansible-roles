@@ -2,6 +2,8 @@
 - name: Configure Windows systems
   hosts: all
   become: false
+  collections:
+    - myllynen.windows_ansible_roles
   vars:
     #
     # Ansible WinRM configuration
