@@ -1,6 +1,6 @@
 ---
 - name: Check Windows Recovery Environment configuration
-  win_command: reagentc /info
+  ansible.windows.win_command: reagentc /info
   register: winre_info
   changed_when: false
 

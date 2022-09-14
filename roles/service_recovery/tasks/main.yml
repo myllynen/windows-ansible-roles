@@ -8,7 +8,7 @@
     label: "{{ item.name }}"
 
 - name: Configure service recovery options
-  win_service:
+  ansible.windows.win_service:
     name: "{{ item.item.name }}"
     failure_actions: "{{ item.item.actions }}"
   loop: "{{ configure_services.results }}"

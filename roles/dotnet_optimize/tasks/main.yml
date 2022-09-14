@@ -30,4 +30,5 @@
   register: ngen_command
   changed_when: ngen_command.output[0] != "All compilation targets are up to date." or
                 ngen_command.output | unique | length > 1
-  when: dotnet_optimize_all_assemblies | bool or dotnet_optimize_force_recompile | bool
+  when: dotnet_optimize_all_assemblies | bool or
+        dotnet_optimize_force_recompile | bool

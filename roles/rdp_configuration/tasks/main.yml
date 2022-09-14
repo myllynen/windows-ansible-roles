@@ -1,13 +1,13 @@
 ---
 - name: Configure RDP user authentication
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-TCP
     name: UserAuthentication
     type: dword
     data: "{{ 1 if rdp_configuration_authenticate|bool else 0 }}"
 
 - name: Enable RDP service
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKLM:\System\CurrentControlSet\Control\Terminal Server
     name: fDenyTSConnections
     type: dword
@@ -15,7 +15,7 @@
   when: rdp_configuration_enable | bool
 
 - name: Allow firewall RDP port
-  win_firewall_rule:
+  community.windows.win_firewall_rule:
     name: Remote Desktop
     localport: 3389
     action: allow
@@ -26,7 +26,7 @@
   when: rdp_configuration_enable | bool
 
 - name: Disable RDP service
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKLM:\System\CurrentControlSet\Control\Terminal Server
     name: fDenyTSConnections
     type: dword
@@ -34,7 +34,7 @@
   when: not rdp_configuration_enable | bool
 
 - name: Block firewall RDP port
-  win_firewall_rule:
+  community.windows.win_firewall_rule:
     name: Remote Desktop
     localport: 3389
     action: block

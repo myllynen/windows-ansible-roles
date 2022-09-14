@@ -1,6 +1,6 @@
 ---
 - name: Disable Server Manager at logon
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKLM:\Software\Microsoft\ServerManager
     name: DoNotOpenServerManagerAtLogon
     type: dword
@@ -8,6 +8,6 @@
   when: user_experience_server_manager_disable | bool
 
 - name: Disable network location wizard
-  win_regedit:
+  ansible.windows.win_regedit:
     path: HKLM:\System\CurrentControlSet\Control\Network\NewNetworkWindowOff
   when: user_experience_network_location_wizard_disable | bool

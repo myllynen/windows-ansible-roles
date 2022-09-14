@@ -1,6 +1,6 @@
 ---
 - name: Join AD domain
-  win_domain_membership:
+  ansible.windows.win_domain_membership:
     dns_domain_name: "{{ domain_name }}"
     hostname: "{{ ansible_facts.hostname }}"
     domain_admin_user: "{{ domain_username }}"
@@ -10,7 +10,7 @@
   register: domain_state
 
 - name: Reboot system
-  win_reboot:
+  ansible.windows.win_reboot:
     pre_reboot_delay: 0
     reboot_timeout: 600
     msg: "Reboot after joining domain"

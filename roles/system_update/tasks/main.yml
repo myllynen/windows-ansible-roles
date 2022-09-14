@@ -3,7 +3,7 @@
   vars:
     ansible_winrm_read_timeout_sec: "{{ system_update_reboot_timeout|int + 10 }}"
     ansible_winrm_operation_timeout_sec: "{{ system_update_reboot_timeout|int + 5 }}"
-  win_updates:
+  ansible.windows.win_updates:
     category_names: '*'
     state: installed
     reboot: true
@@ -15,7 +15,7 @@
     var: update_install
 
 - name: Reboot system
-  win_reboot:
+  ansible.windows.win_reboot:
     pre_reboot_delay: 0
     reboot_timeout: "{{ system_update_reboot_timeout|int }}"
     msg: "Reboot after installing updates"

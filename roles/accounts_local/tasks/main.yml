@@ -1,17 +1,17 @@
 ---
 - name: Disable built-in Administrator account
-  win_user:
+  ansible.windows.win_user:
     name: Administrator
     account_disabled: true
   when: accounts_local_administrator_disable | bool
 
 - name: Enable built-in Administrator account
-  win_user:
+  ansible.windows.win_user:
     name: Administrator
     account_disabled: false
   when: not accounts_local_administrator_disable | bool
 
 - name: Disable password expiration for winrm user
-  win_user:
+  ansible.windows.win_user:
     name: winrm
     password_never_expires: true
