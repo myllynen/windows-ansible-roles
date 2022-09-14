@@ -1,5 +1,5 @@
 ---
-- name: Configure Windows systems
+- name: Configure Windows
   hosts: all
   become: false
   collections:
