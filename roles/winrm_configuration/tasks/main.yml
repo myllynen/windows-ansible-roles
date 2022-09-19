@@ -22,7 +22,7 @@
   when: winrm_configuration_display_config | bool
 
 - name: Display WinRM service details
-  debug:
+  ansible.builtin.debug:
     var: winrm_service_info.services[0]
   when: winrm_configuration_display_config | bool
 
@@ -36,6 +36,6 @@
   when: winrm_configuration_display_config | bool
 
 - name: Display WinRM service configuration
-  debug:
+  ansible.builtin.debug:
     var: winrm_config_info.output
   when: winrm_configuration_display_config | bool

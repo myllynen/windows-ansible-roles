@@ -11,7 +11,7 @@
   register: update_install
 
 - name: Display update results
-  debug:
+  ansible.builtin.debug:
     var: update_install
 
 - name: Reboot system
