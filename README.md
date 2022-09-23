@@ -6,7 +6,7 @@ Ansible roles for Windows configuration.
 
 ## Quick Intro
 
-To install this collection:
+To install this collection from GitHub:
 
 ```
 ansible-galaxy collection install git+https://github.com/myllynen/windows-ansible-roles,master
