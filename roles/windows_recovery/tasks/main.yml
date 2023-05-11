@@ -6,7 +6,7 @@
 
 - name: Configure Windows Recovery Environment
   vars:
-    winre_disable: "{{ '$true' if windows_recovery_disable|bool else '$false' }}"
+    winre_disable: "{{ '$true' if windows_recovery_disable | bool else '$false' }}"
     winre_enabled: "{{ '$true' if 'Enabled' in winre_info.stdout else '$false' }}"
   ansible.windows.win_powershell:
     error_action: stop

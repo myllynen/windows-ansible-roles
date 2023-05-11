@@ -4,7 +4,7 @@
     path: HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-TCP
     name: UserAuthentication
     type: dword
-    data: "{{ 1 if rdp_configuration_authenticate|bool else 0 }}"
+    data: "{{ 1 if rdp_configuration_authenticate | bool else 0 }}"
 
 - name: Enable RDP service
   ansible.windows.win_regedit:
