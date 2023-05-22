@@ -6,4 +6,4 @@
 
 - name: Configure boot timeout
   ansible.windows.win_command: bcdedit /timeout {{ boot_configuration_timeout }}
-  when: not bcdedit_output.stdout | regex_search('timeout \\s+ ' + boot_configuration_timeout|string +'\\r\\n')
+  when: not bcdedit_output.stdout | regex_search('timeout \\s+ ' + boot_configuration_timeout | string +'\\r\\n')

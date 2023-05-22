@@ -12,6 +12,7 @@ license:
 tags:
   - windows
   - configuration
+  - infrastructure
 dependencies:
   ansible.windows: ">=1.11.0"
   community.windows: ">=1.11.0"

@@ -14,8 +14,8 @@
     automatic: "{{ true if page_file_size == 'auto' else false }}"
     remove_all: "{{ true if disable_page_file else false }}"
     override: "{{ false if static_page_file else omit }}"
-    initial_size: "{{ page_file_size|int if static_page_file else omit }}"
-    maximum_size: "{{ page_file_size|int if static_page_file else omit }}"
+    initial_size: "{{ page_file_size | int if static_page_file else omit }}"
+    maximum_size: "{{ page_file_size | int if static_page_file else omit }}"
     state: "{{ 'absent' if disable_page_file else page_file_state }}"
   register: page_file_config
 
