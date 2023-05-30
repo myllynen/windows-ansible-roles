@@ -12,6 +12,11 @@ To install this collection from GitHub:
 ansible-galaxy collection install git+https://github.com/myllynen/windows-ansible-roles,master
 ```
 
+Depending on the environment and requirements separate playbooks and/or
+vars files, group vars, variables defined in an inventory, or some other
+approach might be appropriate for providing configuration variables for
+the roles.
+
 See the example playbook [configure_windows.yml](configure_windows.yml)
 for all the configuration options these roles support and how they could
 be used together. For production environment configure
