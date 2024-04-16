@@ -16,13 +16,13 @@
 
 - name: Allow firewall RDP port
   community.windows.win_firewall_rule:
+    enabled: true
+    state: present
     name: Remote Desktop
     localport: 3389
     action: allow
     direction: in
     protocol: tcp
-    state: present
-    enabled: true
   when: rdp_configuration_enable | bool
 
 - name: Disable RDP service
@@ -35,11 +35,11 @@
 
 - name: Block firewall RDP port
   community.windows.win_firewall_rule:
+    enabled: true
+    state: present
     name: Remote Desktop
     localport: 3389
     action: block
     direction: in
     protocol: tcp
-    state: present
-    enabled: true
   when: not rdp_configuration_enable | bool

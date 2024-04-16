@@ -1,12 +1,12 @@
 ---
 - name: Join AD domain
   ansible.windows.win_domain_membership:
+    state: domain
     dns_domain_name: "{{ domain_name }}"
     hostname: "{{ ansible_facts.hostname }}"
     domain_admin_user: "{{ domain_username }}"
     domain_admin_password: "{{ domain_password }}"
     domain_ou_path: "{{ domain_ou }}"
-    state: domain
   register: domain_state
 
 - name: Reboot system
