@@ -3,7 +3,7 @@
   ansible.windows.win_service_info:
     name: "{{ item }}"
   register: disable_services
-  loop: "{{ service_enablement_disable | select() }}"
+  loop: "{{ service_enablement_disable | select }}"
 
 - name: Disable unwanted services
   ansible.windows.win_service:
@@ -19,7 +19,7 @@
   ansible.windows.win_service_info:
     name: "{{ item }}"
   register: enable_services
-  loop: "{{ service_enablement_enable | select() }}"
+  loop: "{{ service_enablement_enable | select }}"
 
 - name: Enable wanted services
   ansible.windows.win_service:

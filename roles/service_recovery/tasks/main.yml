@@ -3,7 +3,7 @@
   ansible.windows.win_service_info:
     name: "{{ item.name }}"
   register: configure_services
-  loop: "{{ service_recovery_options | select() }}"
+  loop: "{{ service_recovery_options | select }}"
   loop_control:
     label: "{{ item.name }}"
 
