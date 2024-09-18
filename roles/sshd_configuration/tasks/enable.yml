@@ -19,7 +19,6 @@
     name: DefaultShell
     type: String
     data: "{{ sshd_configuration_shell }}"
-  register: sshd_default_shell
   when: sshd_configuration_shell is string
 
 - name: Create sshd configuration directory
@@ -131,5 +130,4 @@
   when:
     - service_start is not changed
     - sshd_config_template is changed or
-      sshd_config_options is changed or
-      sshd_default_shell is changed
+      sshd_config_options is changed
