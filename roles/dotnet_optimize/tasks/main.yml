@@ -17,18 +17,6 @@
                 ngen_command.output | unique | length > 1
   when: dotnet_optimize_powershell | bool
 
-- name: Compile all assemblies
-  vars:
-    force_flag: "{{ '/force' if dotnet_optimize_force_recompile | bool else '' }}"
-  ansible.windows.win_powershell:
-    error_action: continue
-    script: |
-      $env:path = [Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
-      ngen update {{ force_flag }} /nologo `
-        | Select-String -NotMatch -Pattern 'Failed to load|Assembly will be compiled once the' `
-        | % { $_.Line }
-  register: ngen_command
-  changed_when: ngen_command.output[0] != "All compilation targets are up to date." or
-                ngen_command.output | unique | length > 1
-  when: dotnet_optimize_all_assemblies | bool or
-        dotnet_optimize_force_recompile | bool
+- name: Compile all installed assemblies
+  community.windows.win_dotnet_ngen:
+  when: dotnet_optimize_all_assemblies | bool

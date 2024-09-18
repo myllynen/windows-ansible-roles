@@ -16,6 +16,9 @@ Below are the role default values from defaults/main.yml:
 # size - static page file size in MB
 page_file_size: auto
 page_file_disk: C
+
+# Reboot after page file change
+page_file_reboot: true
 </pre>
 
 ## License

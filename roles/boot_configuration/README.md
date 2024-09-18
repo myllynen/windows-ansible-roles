@@ -10,7 +10,7 @@ Below are the role default values from defaults/main.yml:
 
 <pre>
 ---
-boot_configuration_timeout: 5
+boot_configuration_timeout: 30
 </pre>
 
 ## License

@@ -1,5 +1,9 @@
 ---
 # DoNotOpenServerManagerAtLogon
 user_experience_server_manager_disable: true
-# Disable network location wizard
+
+# Disable network location wizard (disable only)
 user_experience_network_location_wizard_disable: true
+
+# Remove last user name at Welcome Screen
+user_experience_hide_last_user_name: true

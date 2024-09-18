@@ -21,7 +21,8 @@
 
 - name: Reboot system
   ansible.windows.win_reboot:
-    pre_reboot_delay: 0
     reboot_timeout: 600
-    msg: "Reboot after configuring page file"
-  when: page_file_config is changed
+    msg: "Ansible reboot after configuring page file"
+  when:
+    - page_file_reboot | bool
+    - page_file_config is changed

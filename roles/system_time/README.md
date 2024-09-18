@@ -10,9 +10,13 @@ Below are the role default values from defaults/main.yml:
 
 <pre>
 ---
-system_time_timezone: UTC
 system_time_ntp_servers:
   - time.windows.com
+
+system_time_timezone: UTC
+
+# Reboot after timezone change
+system_time_timezone_reboot: true
 </pre>
 
 ## License

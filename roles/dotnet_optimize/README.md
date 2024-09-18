@@ -13,11 +13,8 @@ Below are the role default values from defaults/main.yml:
 # Compile PowerShell assemblies
 dotnet_optimize_powershell: true
 
-# Compile all assemblies as needed
+# Compile all installed assemblies
 dotnet_optimize_all_assemblies: false
-
-# Force recompiling all assemblies
-dotnet_optimize_force_recompile: false
 </pre>
 
 ## License

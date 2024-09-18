@@ -11,7 +11,7 @@ Below are the role default values from defaults/main.yml:
 <pre>
 ---
 # Enable or disable Windows Recovery Environment
-windows_recovery_disable: true
+windows_recovery_enable: false
 </pre>
 
 ## License

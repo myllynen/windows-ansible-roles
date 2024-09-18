@@ -13,6 +13,12 @@ Below are the role default values from defaults/main.yml:
 # Enable or disable RDP
 rdp_configuration_enable: true
 
+# Firewall profiles to apply rules
+rdp_configuration_firewall_profiles:
+  - domain
+  - private
+  - public
+
 # Require authentication for RDP
 rdp_configuration_authenticate: true
 </pre>

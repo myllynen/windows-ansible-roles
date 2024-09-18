@@ -1,4 +1,21 @@
 ---
+- name: Configure time sync
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\W32Time\Parameters
+    name: NtpServer
+    type: String
+    data: "{{ system_time_ntp_servers | join(',0x8 ') + ',0x8' }}"
+  register: ntp_config
+  when:
+    - system_time_ntp_servers is iterable
+    - system_time_ntp_servers is not string
+    - system_time_ntp_servers is not mapping
+    - system_time_ntp_servers | length > 0
+
+- name: Apply time sync configuration change
+  ansible.windows.win_command: w32tm /config /update
+  when: ntp_config is changed
+
 - name: Configure timezone
   community.windows.win_timezone:
     timezone: "{{ system_time_timezone }}"
@@ -6,20 +23,8 @@
 
 - name: Reboot system
   ansible.windows.win_reboot:
-    pre_reboot_delay: 0
     reboot_timeout: 600
-    msg: "Reboot after configuring timezone"
-  when: timezone_config is changed
-
-- name: Configure time sync
-  ansible.windows.win_regedit:
-    path: HKLM:\System\CurrentControlSet\Services\W32Time\Parameters
-    name: NtpServer
-    type: string
-    data: "{{ system_time_ntp_servers | join(',0x8 ') + ',0x8' }}"
-  register: ntp_config
-  when: "system_time_ntp_servers | type_debug == 'list'"
-
-- name: Apply time sync configuration change
-  ansible.windows.win_command: w32tm /config /update
-  when: ntp_config is changed
+    msg: "Ansible reboot after timezone change"
+  when:
+    - system_time_timezone_reboot | bool
+    - timezone_config is changed

@@ -13,9 +13,9 @@
         Exit 1
       }
 
-      if (!(Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Keyboard Layout' -Name IgnoreRemoteKeyboardLayout -ErrorAction Ignore)) {
+      if (!(Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Keyboard Layout' -Name IgnoreRemoteKeyboardLayout -ErrorAction Ignore)) {
         $Ansible.Changed = $true
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Keyboard Layout' -Name IgnoreRemoteKeyboardLayout -Type DWord -Value 1 -Force
+        Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Keyboard Layout' -Name IgnoreRemoteKeyboardLayout -Type DWord -Value 1 -Force
       }
 
       if ((Get-WinSystemLocale).Name -ne "{{ system_locale_system }}") {
@@ -58,9 +58,8 @@
 
 - name: Reboot system
   ansible.windows.win_reboot:
-    pre_reboot_delay: 0
     reboot_timeout: 600
-    msg: "Reboot after configuring locales"
+    msg: "Ansible reboot after locale configuration"
   when: system_locale is changed
 
 - name: Configure current user locale
@@ -111,9 +110,8 @@
 
 - name: Reboot system
   ansible.windows.win_reboot:
-    pre_reboot_delay: 0
     reboot_timeout: 600
-    msg: "Reboot after configuring locales"
+    msg: "Ansible reboot after locale configuration"
   when: user_locale is changed
 
 - name: Check current user SID
@@ -160,9 +158,8 @@
 
 - name: Reboot system
   ansible.windows.win_reboot:
-    pre_reboot_delay: 0
     reboot_timeout: 600
-    msg: "Reboot after configuring locales"
+    msg: "Ansible reboot after locale configuration"
   when: welcome_config is changed
 
 - name: Check Copy-UserInternationalSettingsToSystem cmdlet
@@ -190,7 +187,6 @@
 
 - name: Reboot system
   ansible.windows.win_reboot:
-    pre_reboot_delay: 0
     reboot_timeout: 600
-    msg: "Reboot after configuring locales"
+    msg: "Ansible reboot after locale configuration"
   when: welcome_config is changed

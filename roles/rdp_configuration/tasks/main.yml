@@ -1,35 +1,9 @@
 ---
-- name: Configure RDP user authentication
-  ansible.windows.win_regedit:
-    path: HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-TCP
-    name: UserAuthentication
-    type: dword
-    data: "{{ 1 if rdp_configuration_authenticate | bool else 0 }}"
-
-- name: Enable RDP service
-  ansible.windows.win_regedit:
-    path: HKLM:\System\CurrentControlSet\Control\Terminal Server
-    name: fDenyTSConnections
-    type: dword
-    data: 0
-  when: rdp_configuration_enable | bool
-
-- name: Allow firewall RDP port
-  community.windows.win_firewall_rule:
-    enabled: true
-    state: present
-    name: Remote Desktop
-    localport: 3389
-    action: allow
-    direction: in
-    protocol: tcp
-  when: rdp_configuration_enable | bool
-
 - name: Disable RDP service
   ansible.windows.win_regedit:
-    path: HKLM:\System\CurrentControlSet\Control\Terminal Server
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server
     name: fDenyTSConnections
-    type: dword
+    type: DWord
     data: 1
   when: not rdp_configuration_enable | bool
 
@@ -37,9 +11,37 @@
   community.windows.win_firewall_rule:
     enabled: true
     state: present
-    name: Remote Desktop
+    name: Remote Desktop - User Mode (TCP-In)
     localport: 3389
     action: block
     direction: in
     protocol: tcp
+    profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
   when: not rdp_configuration_enable | bool
+
+- name: Configure RDP user authentication
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-TCP
+    name: UserAuthentication
+    type: DWord
+    data: "{{ 1 if rdp_configuration_authenticate | bool else 0 }}"
+
+- name: Enable RDP service
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server
+    name: fDenyTSConnections
+    type: DWord
+    data: 0
+  when: rdp_configuration_enable | bool
+
+- name: Allow firewall RDP port
+  community.windows.win_firewall_rule:
+    enabled: true
+    state: present
+    name: Remote Desktop - User Mode (TCP-In)
+    localport: 3389
+    action: allow
+    direction: in
+    protocol: tcp
+    profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
+  when: rdp_configuration_enable | bool
