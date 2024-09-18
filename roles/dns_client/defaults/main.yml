@@ -1,0 +1,8 @@
+---
+# Target network adapters
+dns_client_adapter_names: '*'
+
+# List of DNS servers
+dns_client_dns_servers:
+#  - 1.1.1.1
+#  - 8.8.8.8

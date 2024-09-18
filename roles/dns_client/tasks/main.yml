@@ -1,0 +1,11 @@
+---
+- name: Configure DNS client
+  ansible.windows.win_dns_client:
+    adapter_names: "{{ dns_client_adapter_names }}"
+    dns_servers: "{{ dns_client_dns_servers }}"
+  register: dns_client_config
+  when: dns_client_dns_servers is not none
+
+- name: Flush DNS resolver cache
+  ansible.windows.win_command: ipconfig /flushdns
+  when: dns_client_config is changed
