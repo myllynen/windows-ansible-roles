@@ -2,6 +2,7 @@
 - name: Configure Windows
   hosts: all
   become: false
+  gather_facts: false
   collections:
     - myllynen.windows_ansible_roles
   vars:
@@ -9,32 +10,50 @@
     # Ansible WinRM configuration
     #
     ansible_connection: winrm
-    ansible_winrm_port: 5985
-    ansible_winrm_user: winrm
-    ansible_winrm_password: foobar
+    ansible_pipelining: true
+    ansible_winrm_port: 5986
+    ansible_winrm_scheme: https
     ansible_winrm_transport: basic
-    ansible_winrm_scheme: http
+    ansible_winrm_server_cert_validation: ignore
+
+    ansible_winrm_user: winrm
+    ansible_winrm_password: Foobar_12
+
     ansible_become_method: runas
+
+    #
+    # Ansible Windows/SSH configuration
+    #
+    #ansible_shell_type: powershell
+    #ansible_become_method: runas
 
     #
     # accounts_local
     #
     # Enable or disable built-in Administrator
-    accounts_local_administrator_disable: true
+    accounts_local_administrator_enable: true
+
+    # Enable or disable Ansible user password expiration
+    accounts_local_ansible_user_password_expires: false
+
+    # Show or hide Ansible user in Welcome Screen
+    accounts_local_ansible_user_hide_in_welcome: true
 
     #
     # boot_configuration
     #
-    boot_configuration_timeout: 5
+    boot_configuration_timeout: 30
 
     #
-    # domain_join
+    # dns_client
     #
-    # These should come from vault
-    #domain_username:
-    #domain_password:
-    domain_name: example.com
-    domain_ou: OU=Servers,DC=example,DC=com
+    # Target network adapters
+    dns_client_adapter_names: '*'
+
+    # List of DNS servers
+    dns_client_dns_servers:
+    #  - 1.1.1.1
+    #  - 8.8.8.8
 
     #
     # dotnet_optimize
@@ -42,17 +61,47 @@
     # Compile PowerShell assemblies
     dotnet_optimize_powershell: true
 
-    # Compile all assemblies as needed
+    # Compile all installed assemblies
     dotnet_optimize_all_assemblies: false
 
-    # Force recompiling all assemblies
-    dotnet_optimize_force_recompile: false
+    #
+    # etc_hosts
+    #
+    #etc_hosts_header: - omitted here for brevity
 
+    # Add entry for host itself based on Ansible facts
+    # This will use the first IP address found in system
+    # This should be disabled when not using static IP
+    etc_hosts_self_add: false
+
+    # Force domain name used in host self entry
+    # If unset defaults to ansible_facts.domain
+    # Required if ansible_facts.domain is empty
+    etc_hosts_self_domain:
+
+    # List of lines to add to /etc/hosts
+    # NB. Other entries will be removed
+    etc_hosts_entries:
+    #  - 192.168.122.1    gateway.example.com gateway
+    #  - 192.168.122.150  bastion.example.com bastion
+
+    # /etc/hosts entries to omit
+    # none - do not omit entries
+    # ipv4 - omit all IPv4 entries
+    # ipv6 - omit all IPv6 entries
+    etc_hosts_omit_entries: none
 
     #
     # network_configuration
     #
-    network_configuration_ipv6_disable: true
+    # Enable or disable IPv6
+    network_configuration_ipv6_enable: true
+
+    # Enable or disable NetBIOS
+    network_configuration_netbios_enable: true
+
+    # Reboot after network changes
+    network_configuration_reboot: true
 
     #
     # performance_tuning
@@ -64,11 +113,20 @@
     page_file_size: auto
     page_file_disk: C
 
+    # Reboot after page file change
+    page_file_reboot: true
+
     #
     # rdp_configuration
     #
     # Enable or disable RDP
     rdp_configuration_enable: true
+
+    # Firewall profiles to apply rules
+    rdp_configuration_firewall_profiles:
+      - domain
+      - private
+      - public
 
     # Require authentication for RDP
     rdp_configuration_authenticate: true
@@ -95,6 +153,73 @@
             type: reboot
 
     #
+    # sshd_configuration
+    #
+    # Enable or disable sshd
+    sshd_configuration_enable: true
+
+    # Install OpenSSH.Server capability if needed
+    # Skipping this will speedup the role a little
+    # if sshd is already installed but the role is
+    # going to fail in case sshd is not installed.
+    # This is not needed with Windows Server 2025.
+    sshd_configuration_install: false
+
+    # Default shell for sshd, this must be kept in
+    # sync with ansible_shell_type to avoid errors
+    # NB. Needs an absolute path
+    # For cmd.exe the path is: C:\Windows\System32\cmd.exe
+    # For PowerShell must use: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+    sshd_configuration_shell:
+
+    # Administrators SSH keys to add/remove
+    sshd_configuration_admins_keys:
+    #  absent:
+    #    - ssh-rsa ...
+    #  present:
+    #    - ssh-ed25519 ...
+
+    # sshd service start mode: auto or delayed
+    sshd_configuration_start_mode: auto
+
+    # Firewall profiles to apply rules
+    sshd_configuration_firewall_profiles:
+      - domain
+      - private
+      - public
+
+    # Enable sshd_config validatiion using a copy if
+    # the file is about to be updated. Recommended.
+    sshd_configuration_config_validate: true
+
+    # sshd configuration file template to use
+    # This is mutually exclusive with the options below
+    # Role provided alternatives:
+    # * default_config - OpenSSH.Server 0.0.1.0 default
+    sshd_configuration_config_file:
+
+    # These options will be explicitly set in sshd_config,
+    # no other options will be left in place after update.
+    # The example set below matches OpenSSH.Server 0.0.1.0
+    sshd_configuration_options:
+    #  AuthorizedKeysFile: .ssh/authorized_keys
+    #  Subsystem: sftp sftp-server.exe
+    #  AllowGroups: administrators "openssh users"
+    #  Match Group administrators:
+    #    - AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys
+
+    #
+    # system_hostname
+    #
+    # System hostname to be configured in the system
+    #
+    # Should be short name (not FQDN) and valid for DNS
+    system_hostname: "{{ ansible_facts.hostname | upper }}"
+
+    # Reboot after system hostname change
+    system_hostname_reboot: true
+
+    #
     # system_locale
     #
     # NB. Configuring keyboard for Welcome Screen is notoriously difficult, this
@@ -105,54 +230,113 @@
 
     system_locale_system: en-US
     system_locale_ui: en-US
-    system_locale_user: fi-FI
-    system_locale_input: fi-FI
+    system_locale_user: en-US
+    system_locale_input: 040B:00000409
+
+    #
+    # system_reboot
+    #
+    system_reboot_timeout: 600.0
+
+    system_reboot_delay_pre: 2.0
+    system_reboot_delay_post: 0.0
+
+    system_reboot_message: Reboot initiated by Ansible
 
     #
     # system_time
     #
-    system_time_timezone: FLE Standard Time
     system_time_ntp_servers:
       - time.windows.com
+
+    system_time_timezone: FLE Standard Time
+
+    # Reboot after timezone change
+    system_time_timezone_reboot: true
 
     #
     # system_update
     #
+    # Parameters for win_updates
+    system_update_categories: '*'
+    system_update_state: installed
+
+    # Reboot if needed after updates
+    system_update_reboot: true
     system_update_reboot_timeout: 1200
+
+    # Compile all installed assemblies
+    # This will happen only after updates
+    system_update_compile_assemblies: true
+
+    # Trigger compilation only when updates with
+    # the following description were part of the
+    # installed updates. Use '.*' for everything.
+    system_update_compile_filter: Cumulative Update
 
     #
     # user_experience
     #
     # DoNotOpenServerManagerAtLogon
     user_experience_server_manager_disable: true
-    # Disable network location wizard
+
+    # Disable network location wizard (disable only)
     user_experience_network_location_wizard_disable: true
+
+    # Remove last user name at Welcome Screen
+    user_experience_hide_last_user_name: true
 
     #
     # windows_recovery
     #
     # Enable or disable Windows Recovery Environment
-    windows_recovery_disable: true
+    windows_recovery_enable: false
 
     #
     # winrm_configuration
     #
-    winrm_configuration_start_mode: delayed
+    # Enable or disable WinRM
+    winrm_configuration_enable: true
+
+    # By default Basic / HTTPS connections
+    # will be enabled using a self-signed
+    # certificate in case the winrm HTTPS
+    # listener has not been configured yet.
+    # Disable this to skip configuring winrm
+    winrm_configuration_https_enable: true
+
+    # Optionally ensure WinRM HTTP port is blocked
+    winrm_configuration_http_block: true
+
+    # winrm service start mode: auto or delayed
+    winrm_configuration_start_mode: auto
+
+    # Firewall profiles to apply rules
+    winrm_configuration_firewall_profiles:
+      - domain
+      - private
+      - public
+
+    # Optionally display current configuration
     winrm_configuration_display_config: false
 
   roles:
+    - system_hostname
+    - etc_hosts
+    - dns_client
     - system_time
-    - system_locale
-    #- { role: domain_join, when: domain_username is defined }
+    #- system_locale
     - accounts_local
     - boot_configuration
-    - network_configuration
     - winrm_configuration
+    - network_configuration
+    - sshd_configuration
     - rdp_configuration
     #- system_update
-    - dotnet_optimize
-    - windows_recovery
+    #- dotnet_optimize
+    #- windows_recovery
     - performance_tuning
-    - service_enablement
-    - service_recovery
+    #- service_enablement
+    #- service_recovery
     - user_experience
+    #- system_reboot
