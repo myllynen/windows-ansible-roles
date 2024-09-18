@@ -1,0 +1,133 @@
+---
+- name: Install OpenSSH.Server capability
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      $Ansible.Changed = $false
+      $sshdInstalled = Get-WindowsCapability -Online | `
+                       ? State -eq 'Installed' | `
+                       ? Name -match 'OpenSSH.Server'
+      if (!$sshdInstalled) {
+        $Ansible.Changed = $true
+        Add-WindowsCapability -Online -Name 'OpenSSH.Server'
+      }
+  when: sshd_configuration_install | bool
+
+- name: Configure sshd default shell
+  ansible.windows.win_regedit:
+    path: HKLM:\SOFTWARE\OpenSSH
+    name: DefaultShell
+    type: String
+    data: "{{ sshd_configuration_shell }}"
+  when: sshd_configuration_shell is string
+
+- name: Create sshd configuration directory
+  ansible.windows.win_file:
+    path: C:\ProgramData\ssh
+    state: directory
+
+- name: Create administrators SSH key file
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      $Ansible.Changed = $false
+      if (!(Test-Path -Path C:\ProgramData\ssh\administrators_authorized_keys)) {
+        $Ansible.Changed = $true
+        New-Item C:\ProgramData\ssh\administrators_authorized_keys
+      }
+  register: ssh_admins_keys_file
+
+- name: Set administrators SSH key file ACLs
+  vars:
+    path: C:\ProgramData\ssh\administrators_authorized_keys
+  ansible.windows.win_command:
+    cmd: icacls.exe {{ path }} /inheritance:r /grant ""Administrators:F"" /grant ""SYSTEM:F""
+  when: ssh_admins_keys_file is changed
+
+- name: Configure administrators SSH key file
+  vars:
+    keys: "{{ sshd_configuration_admins_keys }}"
+    keys_del: "{{ ['absent'] | product(keys.absent | default([], true)) }}"
+    keys_add: "{{ ['present'] | product(keys.present | default([], true)) }}"
+  community.windows.win_lineinfile:
+    path: C:\ProgramData\ssh\administrators_authorized_keys
+    line: "{{ item.1 }}"
+    state: "{{ item.0 }}"
+  loop: "{{ keys_add + keys_del }}"
+  loop_control:
+    label: "{{ item.0 + ': ' + item.1 | split | last }}"
+  when:
+    - sshd_configuration_admins_keys is mapping
+    - "'absent' in sshd_configuration_admins_keys or
+       'present' in sshd_configuration_admins_keys"
+
+- name: Validate pending sshd configudation
+  include_tasks: validate.yml
+  when: sshd_configuration_config_file is string or
+        (sshd_configuration_options is not none and
+         sshd_configuration_options | length > 0)
+
+- name: Create sshd configuration file using template
+  ansible.windows.win_template:
+    src: "{{ sshd_configuration_config_file }}"
+    dest: C:\ProgramData\ssh\sshd_config
+    newline_sequence: '\r\n'
+  register: sshd_config_template
+  when: sshd_configuration_config_file is string
+
+- name: Create sshd configuration file using options
+  vars:
+    sshd_enable: "{{ sshd_configuration_options | default({}, true) }}"
+    file_content: |
+      {% for item in sshd_enable | dict2items | select %}
+      {% if item.value is not string and item.value is not number %}
+      {% if item.key.startswith('Match') %}
+      {{ item.key }}
+      {% for value in item.value %}
+          {{ value }}
+      {% endfor %}
+      {% else %}
+      {% for value in item.value %}
+      {{ item.key }} {{ value }}
+      {% endfor %}
+      {% endif %}
+      {% else %}
+      {{ item.key }} {{ item.value }}
+      {% endif %}
+      {% endfor %}
+  ansible.windows.win_copy:
+    content: "{{ file_content | regex_replace('\\n', '\\r\\n') }}"
+    dest: C:\ProgramData\ssh\sshd_config
+  register: sshd_config_options
+  when:
+    - sshd_configuration_config_file is not string
+    - sshd_configuration_options is not none
+    - sshd_configuration_options | length > 0
+
+- name: Enable sshd service
+  ansible.windows.win_service:
+    state: started
+    name: sshd
+    start_mode: "{{ sshd_configuration_start_mode }}"
+  register: service_start
+
+- name: Allow firewall SSH port
+  community.windows.win_firewall_rule:
+    enabled: true
+    state: present
+    name: OpenSSH SSH Server (sshd)
+    localport: 22
+    action: allow
+    direction: in
+    protocol: tcp
+    profiles: "{{ sshd_configuration_firewall_profiles | default(omit, true) }}"
+
+- name: Restart sshd service to apply configuration changes
+  ansible.windows.win_service:
+    state: restarted
+    name: sshd
+    start_mode: auto
+  when:
+    - service_start is not changed
+    - sshd_config_template is changed or
+      sshd_config_options is changed

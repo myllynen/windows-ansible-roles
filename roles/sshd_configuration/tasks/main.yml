@@ -1,0 +1,8 @@
+---
+- name: Disable sshd
+  include_tasks: disable.yml
+  when: not sshd_configuration_enable | bool
+
+- name: Enable sshd
+  include_tasks: enable.yml
+  when: sshd_configuration_enable | bool

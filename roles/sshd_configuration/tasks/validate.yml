@@ -1,0 +1,59 @@
+---
+- name: Create temp sshd configuration file using template
+  ansible.windows.win_template:
+    src: "{{ sshd_configuration_config_file }}"
+    dest: C:\ProgramData\ssh\sshd_config.tmp
+    newline_sequence: '\r\n'
+  register: sshd_config_template
+  when: sshd_configuration_config_file is string
+
+- name: Create temp sshd configuration file using options
+  vars:
+    sshd_enable: "{{ sshd_configuration_options | default({}, true) }}"
+    file_content: |
+      {% for item in sshd_enable | dict2items | select %}
+      {% if item.value is not string and item.value is not number %}
+      {% if item.key.startswith('Match') %}
+      {{ item.key }}
+      {% for value in item.value %}
+          {{ value }}
+      {% endfor %}
+      {% else %}
+      {% for value in item.value %}
+      {{ item.key }} {{ value }}
+      {% endfor %}
+      {% endif %}
+      {% else %}
+      {{ item.key }} {{ item.value }}
+      {% endif %}
+      {% endfor %}
+  ansible.windows.win_copy:
+    content: "{{ file_content | regex_replace('\\n', '\\r\\n') }}"
+    dest: C:\ProgramData\ssh\sshd_config.tmp
+  register: sshd_config_options
+  when:
+    - sshd_configuration_config_file is not string
+    - sshd_configuration_options is not none
+    - sshd_configuration_options | length > 0
+
+# This is crazy, but the command gets stuck without -RedirectStandardError
+# and that is not set when ran directly with win_command or win_powershell
+# NB. We do not remove the temp config for idempotency in subsequent runs.
+- name: Validate temp sshd configuration file
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      $p = Start-Process `
+      -FilePath C:\Windows\System32\OpenSSH\sshd.exe `
+      -ArgumentList "-tf C:\ProgramData\ssh\sshd_config.tmp" `
+      -WorkingDirectory C:\ProgramData\ssh `
+      -RedirectStandardError .\.tmp `
+      -NoNewWindow `
+      -PassThru `
+      -Wait
+      if ($p.ExitCode) {
+        $Ansible.Failed = $true
+        $Ansible.Result = Get-Content -Raw .\.tmp
+        del .\.tmp
+      }
+  changed_when: false
