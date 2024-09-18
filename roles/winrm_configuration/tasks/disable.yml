@@ -1,0 +1,33 @@
+---
+- name: Fail if trying to disable winrm using WinRM
+  fail:
+    msg: "Refusing to disable winrm when using WinRM."
+  when: ansible_connection == 'winrm' or
+        ansible_connection == 'psrp'
+
+- name: Disable winrm service
+  ansible.windows.win_service:
+    state: stopped
+    name: winrm
+
+- name: Block firewall WinRM HTTP port
+  community.windows.win_firewall_rule:
+    enabled: true
+    state: present
+    name: Windows Remote Management (HTTP-In)
+    localport: 5985
+    action: block
+    direction: in
+    protocol: tcp
+    profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
+
+- name: Block firewall WinRM HTTPS port
+  community.windows.win_firewall_rule:
+    enabled: true
+    state: present
+    name: Windows Remote Management (HTTPS-In)
+    localport: 5986
+    action: block
+    direction: in
+    protocol: tcp
+    profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"

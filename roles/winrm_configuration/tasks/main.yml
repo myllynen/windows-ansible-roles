@@ -1,41 +1,8 @@
 ---
-- name: Configure WinRM service start mode
-  ansible.windows.win_service:
-    name: WinRM
-    start_mode: "{{ winrm_configuration_start_mode }}"
+- name: Disable WinRM
+  include_tasks: disable.yml
+  when: not winrm_configuration_enable | bool
 
-- name: Initialize list of user accounts to hide
-  ansible.windows.win_regedit:
-    path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList
-
-- name: Hide WinRM user account
-  ansible.windows.win_regedit:
-    path: HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList
-    name: winrm
-    type: dword
-    data: 0
-
-- name: Check WinRM service details
-  ansible.windows.win_service_info:
-    name: WinRM
-  register: winrm_service_info
-  when: winrm_configuration_display_config | bool
-
-- name: Display WinRM service details
-  ansible.builtin.debug:
-    var: winrm_service_info.services[0]
-  when: winrm_configuration_display_config | bool
-
-- name: Check WinRM service configuration
-  ansible.windows.win_powershell:
-    error_action: stop
-    script: |
-      winrm get winrm/config
-  register: winrm_config_info
-  changed_when: false
-  when: winrm_configuration_display_config | bool
-
-- name: Display WinRM service configuration
-  ansible.builtin.debug:
-    var: winrm_config_info.output
-  when: winrm_configuration_display_config | bool
+- name: Enable WinRM
+  include_tasks: enable.yml
+  when: winrm_configuration_enable | bool

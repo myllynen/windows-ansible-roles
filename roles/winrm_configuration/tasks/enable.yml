@@ -1,0 +1,78 @@
+---
+- name: Enable winrm service
+  ansible.windows.win_service:
+    state: started
+    name: winrm
+    start_mode: "{{ winrm_configuration_start_mode }}"
+
+- name: Configure winrm service
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      $Ansible.Changed = $false
+      $friendlyName = "WinRM over HTTPS"
+      $cert = Get-ChildItem -Path Cert:\LocalMachine\My `
+        | Where-Object { $_.FriendlyName -eq $friendlyName }
+      $listener = winrm enumerate winrm/config/listener
+      if (-not $cert -and -not $listener) {
+        $Ansible.Changed = $true
+        $cert = New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My `
+                  -DnsName $env:COMPUTERNAME -NotAfter (get-date).AddYears(10) `
+                  -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" `
+                  -KeyLength 4096
+        $cert.FriendlyName = $friendlyName
+        winrm create winrm/config/Listener?Address=*+Transport=HTTPS `
+          '@{Hostname="'"$env:COMPUTERNAME"'";CertificateThumbprint="'$cert.Thumbprint'"}'
+        Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $true
+        Set-Item -Path WSMan:\localhost\Service\AllowUnencrypted -Value $false
+      }
+  when: winrm_configuration_https_enable | bool
+
+- name: Allow firewall WinRM HTTPS port
+  community.windows.win_firewall_rule:
+    enabled: true
+    state: present
+    name: Windows Remote Management (HTTPS-In)
+    localport: 5986
+    action: allow
+    direction: in
+    protocol: tcp
+    profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
+  when: winrm_configuration_https_enable | bool
+
+- name: Block firewall WinRM HTTP port
+  community.windows.win_firewall_rule:
+    enabled: true
+    state: present
+    name: Windows Remote Management (HTTP-In)
+    localport: 5985
+    action: block
+    direction: in
+    protocol: tcp
+    profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
+  when: winrm_configuration_http_block | bool
+
+- name: Check winrm service details
+  ansible.windows.win_service_info:
+    name: winrm
+  register: winrm_service_info
+  when: winrm_configuration_display_config | bool
+
+- name: Display winrm service details
+  ansible.builtin.debug:
+    var: winrm_service_info.services[0]
+  when: winrm_configuration_display_config | bool
+
+- name: Check winrm service configuration
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      winrm get winrm/config
+  register: winrm_config_info
+  changed_when: false
+  when: winrm_configuration_display_config | bool
+
+- name: Display winrm service configuration
+  ansible.builtin.debug:
+    var: winrm_config_info.output
+  when: winrm_configuration_display_config | bool
