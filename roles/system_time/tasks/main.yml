@@ -13,7 +13,7 @@
     - system_time_ntp_servers | length > 0
 
 - name: Apply time sync configuration change
-  ansible.windows.win_command: w32tm /config /update
+  ansible.windows.win_command: w32tm.exe /config /update
   when: ntp_config is changed
 
 - name: Configure timezone

@@ -7,5 +7,5 @@
   when: dns_client_dns_servers is not none
 
 - name: Flush DNS resolver cache
-  ansible.windows.win_command: ipconfig /flushdns
+  ansible.windows.win_command: ipconfig.exe /flushdns
   when: dns_client_config is changed

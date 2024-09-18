@@ -17,7 +17,7 @@
   register: netbios_config
 
 - name: Flush DNS resolver cache
-  ansible.windows.win_command: ipconfig /flushdns
+  ansible.windows.win_command: ipconfig.exe /flushdns
   when:
     - not network_configuration_reboot | bool
     - ipv6_config is changed or

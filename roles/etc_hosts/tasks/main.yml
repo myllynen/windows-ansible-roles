@@ -50,5 +50,5 @@
   register: hosts_file
 
 - name: Flush DNS resolver cache
-  ansible.windows.win_command: ipconfig /flushdns
+  ansible.windows.win_command: ipconfig.exe /flushdns
   when: hosts_file is changed

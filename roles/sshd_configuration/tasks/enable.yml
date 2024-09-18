@@ -9,7 +9,7 @@
                        ? Name -match 'OpenSSH.Server'
       if (!$sshdInstalled) {
         $Ansible.Changed = $true
-        Add-WindowsCapability -Online -Name 'OpenSSH.Server'
+        Add-WindowsCapability -Name OpenSSH.Server -Online
       }
   when: sshd_configuration_install | bool
 
