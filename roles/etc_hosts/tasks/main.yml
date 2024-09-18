@@ -1,0 +1,54 @@
+---
+- name: Gather needed facts
+  setup:
+    gather_subset:
+      - '!all'
+      - '!min'
+      - platform
+  when:
+    - etc_hosts_self_add | bool
+    - ansible_facts.ip_addresses is not defined or
+      ansible_facts.hostname is not defined or
+      ansible_facts.domain is not defined
+
+- name: Create drivers\etc\hosts file
+  vars:
+    default_ipv4: "{{ ansible_facts.ip_addresses | map('regex_search', '^\\d+(\\.\\d+){3}$') | select | first }}"
+    default_ipv6: "{{ ansible_facts.ip_addresses | map('regex_search', '.*:.*') | select | first }}"
+    self_host: "{{ ansible_facts.hostname.split('.')[0] }}"
+    self_domain: "{{ etc_hosts_self_domain | default(ansible_facts.domain, true) }}"
+    self_fqdn: "{{ self_host + '.' + self_domain }}"
+    etc_hosts_self: |
+      {% if etc_hosts_self_add | bool and 'localhost' not in ansible_facts.hostname %}
+      {% if self_domain != '' and
+            etc_hosts_omit_entries != 'ipv4' and
+            default_ipv4 is defined and
+            default_ipv4 | length > 0 %}
+      {{ '%-16s' | format(default_ipv4) }} {{ self_fqdn }} {{ self_host }}
+      {% endif %}
+      {% if self_domain != '' and
+            etc_hosts_omit_entries != 'ipv6' and
+            default_ipv6 is defined and
+            default_ipv6 | length > 0 %}
+      {{ '%-40s' | format(default_ipv6) }} {{ self_fqdn }} {{ self_host }}
+      {% endif %}
+      {% endif %}
+    etc_hosts_content: |
+      {% for line in (etc_hosts_header.split('\n') if etc_hosts_header else ['omit']) +
+                     (etc_hosts_self.split('\n') if etc_hosts_self_add | bool else ['omit']) +
+                     (etc_hosts_entries | default(['omit'], true)) %}
+      {% if line !='omit' and
+            (etc_hosts_omit_entries == 'none' or
+             (etc_hosts_omit_entries == 'ipv4' and '.' not in line.split(' ')[0]) or
+             (etc_hosts_omit_entries == 'ipv6' and ':' not in line.split(' ')[0])) %}
+      {{ line }}
+      {% endif %}
+      {% endfor %}
+  ansible.windows.win_copy:
+    content: "{{ etc_hosts_content }}"
+    dest: '%windir%\System32\drivers\etc\hosts'
+  register: hosts_file
+
+- name: Flush DNS resolver cache
+  ansible.windows.win_command: ipconfig /flushdns
+  when: hosts_file is changed
