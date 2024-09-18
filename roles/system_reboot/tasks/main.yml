@@ -1,0 +1,8 @@
+---
+- name: Reboot system
+  ansible.windows.win_reboot:
+    pre_reboot_delay: "{{ system_reboot_delay_pre | float }}"
+    post_reboot_delay: "{{ system_reboot_delay_post | float }}"
+    reboot_timeout: "{{ system_reboot_timeout | float }}"
+    msg: "{{ system_reboot_message }}"
+  register: reboot_status

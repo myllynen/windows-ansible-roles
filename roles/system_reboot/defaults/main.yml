@@ -1,0 +1,7 @@
+---
+system_reboot_timeout: 600.0
+
+system_reboot_delay_pre: 2.0
+system_reboot_delay_post: 0.0
+
+system_reboot_message: Reboot initiated by Ansible
