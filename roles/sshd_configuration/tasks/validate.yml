@@ -38,6 +38,7 @@
 
 # This is crazy, but the command gets stuck without -RedirectStandardError
 # and that is not set when ran directly with win_command or win_powershell
+# This issue is reported : https://github.com/ansible/ansible/issues/83958
 # NB. We do not remove the temp config for idempotency in subsequent runs.
 - name: Validate temp sshd configuration file
   ansible.windows.win_powershell:
