@@ -4,10 +4,9 @@
     ansible_winrm_read_timeout_sec: "{{ system_update_reboot_timeout | int + 10 }}"
     ansible_winrm_operation_timeout_sec: "{{ system_update_reboot_timeout | int + 5 }}"
   ansible.windows.win_updates:
-    state: installed
-    category_names: '*'
-    reboot: true
-    reboot_timeout: "{{ system_update_reboot_timeout | int }}"
+    state: "{{ system_update_state }}"
+    category_names: "{{ system_update_categories }}"
+    reboot: false
   register: update_install
 
 - name: Display update results
@@ -16,7 +15,18 @@
 
 - name: Reboot system
   ansible.windows.win_reboot:
-    pre_reboot_delay: 0
-    reboot_timeout: "{{ system_update_reboot_timeout | int }}"
-    msg: "Reboot after installing updates"
-  when: update_install.reboot_required
+    msg: "Ansible reboot after installing updates"
+    reboot_timeout: "{{ system_update_reboot_timeout | float }}"
+  register: reboot_status
+  when:
+    - system_update_reboot | bool
+    - update_install.reboot_required
+
+- name: Compile all installed assemblies
+  vars:
+    filter: "{{ system_update_compile_filter }}"
+    filtered: "{{ update_install.updates | dict2items | selectattr('value.title', 'regex', filter) | length }}"
+  community.windows.win_dotnet_ngen:
+  when:
+    - system_update_compile_assemblies | bool
+    - filtered | int > 0
