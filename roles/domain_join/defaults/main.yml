@@ -1,7 +1,0 @@
----
-domain_name: example.com
-domain_ou: OU=Servers,DC=example,DC=com
-
-# These should come from vault
-#domain_username:
-#domain_password:
