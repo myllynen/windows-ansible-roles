@@ -10,7 +10,14 @@ Below are the role default values from defaults/main.yml:
 
 <pre>
 ---
-network_configuration_ipv6_disable: true
+# Enable or disable IPv6
+network_configuration_ipv6_enable: true
+
+# Enable or disable NetBIOS
+network_configuration_netbios_enable: true
+
+# Reboot after network changes
+network_configuration_reboot: true
 </pre>
 
 ## License

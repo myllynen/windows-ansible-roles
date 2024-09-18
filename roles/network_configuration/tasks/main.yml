@@ -1,8 +1,33 @@
 ---
-- name: Disable IPv6 on all interfaces
+- name: Configure IPv6 on all interfaces
+  vars:
+    ipv6_state: "{{ 'enabled' if network_configuration_ipv6_enable | bool else 'disabled' }}"
   community.windows.win_net_adapter_feature:
-    state: disabled
+    state: "{{ ipv6_state }}"
     interface: '*'
     component_id:
       - ms_tcpip6
-  when: network_configuration_ipv6_disable | bool
+  register: ipv6_config
+
+- name: Configure NetBIOS on all interfaces
+  vars:
+    netbios_state: "{{ 'enabled' if network_configuration_netbios_enable | bool else 'disabled' }}"
+  community.windows.win_netbios:
+    state: "{{ netbios_state }}"
+  register: netbios_config
+
+- name: Flush DNS resolver cache
+  ansible.windows.win_command: ipconfig /flushdns
+  when:
+    - not network_configuration_reboot | bool
+    - ipv6_config is changed or
+      netbios_config is changed
+
+- name: Reboot system
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after network configuration"
+  when:
+    - network_configuration_reboot | bool
+    - ipv6_config is changed or
+      netbios_config is changed
