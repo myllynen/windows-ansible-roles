@@ -1,0 +1,8 @@
+---
+# System hostname to be configured in the system
+#
+# Should be short name (not FQDN) and valid for DNS
+system_hostname: "{{ ansible_facts.hostname | upper }}"
+
+# Reboot after system hostname change
+system_hostname_reboot: true
