@@ -63,9 +63,11 @@
 
 - name: Validate pending sshd configudation
   include_tasks: validate.yml
-  when: sshd_configuration_config_file is string or
-        (sshd_configuration_options is not none and
-         sshd_configuration_options | length > 0)
+  when:
+    - sshd_configuration_config_validate | bool
+    - sshd_configuration_config_file is string or
+      (sshd_configuration_options is not none and
+       sshd_configuration_options | length > 0)
 
 - name: Create sshd configuration file using template
   ansible.windows.win_template:
