@@ -10,10 +10,7 @@ Below are the role default values from defaults/main.yml:
 
 <pre>
 ---
-# Perform minor cleanups after system
-# initial installation. See the tasks
-# for details. Using this role is by
-# no means mandatory or required.
+# Log system initialization message on a fresh system
 
 # System initialization file
 system_init_file: C:\Windows\init_info_system.txt
@@ -26,7 +23,6 @@ system_init_msg_log: "{{ system_init_msg_file }}"
 # reboot - reboot after initialization
 # syslog - write message to system log
 system_init_final_actions:
-  - reboot
   - syslog
 </pre>
 
