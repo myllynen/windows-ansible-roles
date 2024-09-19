@@ -6,7 +6,7 @@
 
 - name: Configure Windows Recovery Environment
   vars:
-    winre_disable: "{{ '$false' if windows_recovery_enable | bool else '$true' }}"
+    winre_disable: "{{ '$true' if not windows_recovery_enable | bool else '$false' }}"
     winre_enabled: "{{ '$true' if 'Enabled' in winre_info.stdout else '$false' }}"
   ansible.windows.win_powershell:
     error_action: stop
@@ -14,11 +14,11 @@
       $Ansible.Changed = $false
       if ({{ winre_disable }} -eq $true -and {{ winre_enabled }} -eq $true) {
         $Ansible.Changed = $true
-        reagentc /disable
+        ReAgentc.exe /disable
       }
-      if ({{ winre_disable }} -eq $true -and (Test-Path -Path 'C:\Recovery')) {
+      if ({{ winre_disable }} -eq $true -and (Test-Path -Path C:\Recovery)) {
         $Ansible.Changed = $true
-        Remove-Item -Path 'C:\Recovery' -Recurse -Force
+        Remove-Item -Path C:\Recovery -Recurse -Force
       }
       #if ({{ winre_disable }} -eq $true -and (Test-Path -Path 'C:\$WinREAgent')) {
       #  $Ansible.Changed = $true
@@ -26,5 +26,5 @@
       #}
       if ({{ winre_disable }} -eq $false -and {{ winre_enabled }} -eq $false) {
         $Ansible.Changed = $true
-        reagentc /enable
+        ReAgentc.exe /enable
       }
