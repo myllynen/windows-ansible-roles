@@ -52,27 +52,6 @@
     profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
   when: winrm_configuration_http_block | bool
 
-- name: Check winrm service details
-  ansible.windows.win_service_info:
-    name: winrm
-  register: winrm_service_info
-  when: winrm_configuration_display_config | bool
-
-- name: Display winrm service details
-  ansible.builtin.debug:
-    var: winrm_service_info.services[0]
-  when: winrm_configuration_display_config | bool
-
-- name: Check winrm service configuration
-  ansible.windows.win_powershell:
-    error_action: stop
-    script: |
-      winrm get winrm/config
-  register: winrm_config_info
-  changed_when: false
-  when: winrm_configuration_display_config | bool
-
-- name: Display winrm service configuration
-  ansible.builtin.debug:
-    var: winrm_config_info.output
+- name: Display WinRM configuration
+  include_tasks: display.yml
   when: winrm_configuration_display_config | bool

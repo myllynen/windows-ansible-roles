@@ -1,0 +1,21 @@
+---
+- name: Check winrm service details
+  ansible.windows.win_service_info:
+    name: winrm
+  register: winrm_service_info
+
+- name: Display winrm service details
+  ansible.builtin.debug:
+    var: winrm_service_info.services[0]
+
+- name: Check winrm service configuration
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      winrm get winrm/config
+  register: winrm_config_info
+  changed_when: false
+
+- name: Display winrm service configuration
+  ansible.builtin.debug:
+    var: winrm_config_info.output
