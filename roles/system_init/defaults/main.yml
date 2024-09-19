@@ -1,0 +1,15 @@
+---
+# Log system initialization message on a fresh system
+
+# System initialization file
+system_init_file: C:\Windows\init_info_system.txt
+
+# System initialization message
+system_init_msg_file: "This system was initialized by system_init on {{ '%Y-%m-%d %H:%M:%S %Z' | strftime }}.\r\n"
+system_init_msg_log: "{{ system_init_msg_file }}"
+
+# Actions to take after initialization
+# reboot - reboot after initialization
+# syslog - write message to system log
+system_init_final_actions:
+  - syslog

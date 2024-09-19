@@ -1,0 +1,20 @@
+---
+- name: Mark system initialized
+  ansible.windows.win_copy:
+    content: "{{ system_init_msg_file }}"
+    dest: "{{ system_init_file }}"
+
+- name: Reboot system
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after system initialization"
+  when: "'reboot' in system_init_final_actions"
+
+- name: Log initialization message
+  community.windows.win_eventlog_entry:
+    log: Application
+    source: Ansible
+    message: "{{ system_init_msg_log }}"
+    entry_type: Information
+    event_id: 0
+  when: "'syslog' in system_init_final_actions"

@@ -1,0 +1,9 @@
+---
+- name: Check system status
+  ansible.windows.win_stat:
+    path: "{{ system_init_file }}"
+  register: system_init
+
+- name: Initialize fresh system
+  include_tasks: init.yml
+  when: not system_init.stat.exists
