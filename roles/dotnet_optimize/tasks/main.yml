@@ -4,12 +4,12 @@
     error_action: continue
     script: |
       # From https://docs.ansible.com/ansible/latest/user_guide/windows_performance.html
-      $ngenPath = [Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
+      $env:Path += [Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
       [AppDomain]::CurrentDomain.GetAssemblies() | foreach {
         if (-not $_.Location) { continue }
         $name = Split-Path -Path $_.Location -Leaf
         if ($name.StartsWith("Microsoft.PowerShell")) {
-          $ngenPath\ngen.exe install $_.Location /nologo
+          ngen.exe install $_.Location /nologo
         }
       }
   register: ngen_command
