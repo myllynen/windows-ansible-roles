@@ -19,7 +19,6 @@ winrm_configuration_start_mode: auto
 winrm_configuration_firewall_profiles:
   - domain
   - private
-  - public
 
 # Optionally display current configuration
 winrm_configuration_display_config: false

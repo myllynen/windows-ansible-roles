@@ -30,7 +30,6 @@ sshd_configuration_start_mode: auto
 sshd_configuration_firewall_profiles:
   - domain
   - private
-  - public
 
 # Enable sshd_config validatiion using a copy if
 # the file is about to be updated. Recommended.

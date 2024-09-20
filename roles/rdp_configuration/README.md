@@ -17,7 +17,6 @@ rdp_configuration_enable: true
 rdp_configuration_firewall_profiles:
   - domain
   - private
-  - public
 
 # Require authentication for RDP
 rdp_configuration_authenticate: true
