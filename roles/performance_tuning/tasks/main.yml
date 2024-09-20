@@ -1,4 +1,11 @@
 ---
+- name: Configure NTFS Last Access Time
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem
+    name: NtfsDisableLastAccessUpdate
+    type: DWord
+    data: "{{ 0x80000001 if ntfs_disable_last_access_time | bool else 0x80000000 }}"
+
 - name: Disable automatic page file
   community.windows.win_pagefile:
     automatic: false

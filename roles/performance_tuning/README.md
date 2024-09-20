@@ -10,6 +10,9 @@ Below are the role default values from defaults/main.yml:
 
 <pre>
 ---
+# Disable NTFS Last Access Time Stamp updates
+ntfs_disable_last_access_time: true
+
 # Page file size configuration
 # auto - automatically managed
 # disabled - page file disabled
