@@ -46,7 +46,7 @@
     script: |
       $p = Start-Process `
       -FilePath C:\Windows\System32\OpenSSH\sshd.exe `
-      -ArgumentList "-tf C:\ProgramData\ssh\sshd_config.tmp" `
+      -ArgumentList '-tf C:\ProgramData\ssh\sshd_config.tmp' `
       -WorkingDirectory C:\ProgramData\ssh `
       -RedirectStandardError .\.tmp `
       -NoNewWindow `

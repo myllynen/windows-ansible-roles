@@ -30,9 +30,9 @@ sshd_configuration_shell:
 # Administrators SSH keys to add/remove
 sshd_configuration_admins_keys:
 #  absent:
-#    - ssh-rsa ...
+#    - ssh-rsa ... id_rsa.pub
 #  present:
-#    - ssh-ed25519 ...
+#    - ssh-ed25519 ... id_rsa.pub
 
 # sshd service start mode: auto or delayed
 sshd_configuration_start_mode: auto
