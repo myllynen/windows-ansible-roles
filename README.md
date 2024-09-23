@@ -18,10 +18,13 @@ approach might be appropriate for providing configuration variables for
 the roles.
 
 See the example playbook [configure_windows.yml](configure_windows.yml)
-for all the configuration options these roles support and how they could
-be used together. For production environment configure
-[Windows Remote Management for Ansible](https://docs.ansible.com/ansible/latest/user_guide/windows_winrm.html)
-appropriately.
+for all the configuration options these roles support and how they
+could be used together.
+
+This collection provides roles to setup OpenSSH SSH Server (sshd) and
+WinRM (Basic+HTTPS) based remote access automatically on recent Windows
+Server versions. For full details on WinRM configuration, see
+[Windows Remote Management for Ansible](https://docs.ansible.com/ansible/latest/user_guide/windows_winrm.html).
 
 For Ansible Windows Guides, see:  
 [https://docs.ansible.com/ansible/latest/user_guide/windows.html](https://docs.ansible.com/ansible/latest/user_guide/windows.html)
