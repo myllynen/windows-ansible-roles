@@ -19,7 +19,7 @@ system_locale_location: 244
 system_locale_system: en-US
 system_locale_ui: en-US
 system_locale_user: en-US
-system_locale_input: en-US
+system_locale_input: 0409:00000409
 </pre>
 
 ## License
