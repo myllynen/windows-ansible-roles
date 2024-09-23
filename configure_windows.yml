@@ -36,8 +36,8 @@
     # Enable or disable Ansible user password expiration
     accounts_local_ansible_user_password_expires: false
 
-    # Show or hide Ansible user in Welcome Screen
-    accounts_local_ansible_user_hide_in_welcome: true
+    # Show or hide Ansible user on Welcome Screen
+    accounts_local_ansible_user_show_on_welcome: false
 
     #
     # boot_configuration
@@ -106,8 +106,8 @@
     #
     # performance_tuning
     #
-    # Disable NTFS Last Access Time Stamp updates
-    ntfs_disable_last_access_time: true
+    # NTFS Last Access Time updates
+    ntfs_last_access_time_update: false
 
     # Page file size configuration
     # auto - automatically managed
@@ -177,9 +177,9 @@
     # Administrators SSH keys to add/remove
     sshd_configuration_admins_keys:
     #  absent:
-    #    - ssh-rsa ...
+    #    - ssh-rsa ... id_rsa.pub
     #  present:
-    #    - ssh-ed25519 ...
+    #    - ssh-ed25519 ... id_ed25519.pub
 
     # sshd service start mode: auto or delayed
     sshd_configuration_start_mode: auto
@@ -248,7 +248,7 @@
     system_locale_system: en-US
     system_locale_ui: en-US
     system_locale_user: en-US
-    system_locale_input: 040B:00000409
+    system_locale_input: 0409:0000040B
 
     #
     # system_reboot
@@ -294,14 +294,14 @@
     #
     # user_experience
     #
-    # DoNotOpenServerManagerAtLogon
-    user_experience_server_manager_disable: true
+    # Open Server Manager at logon
+    user_experience_server_manager_at_logon: true
 
-    # Disable network location wizard (disable only)
-    user_experience_network_location_wizard_disable: true
+    # Enable or disable new network location wizard
+    user_experience_network_location_wizard: false
 
-    # Remove last user name at Welcome Screen
-    user_experience_hide_last_user_name: true
+    # Show or hide last user name on Welcome Screen
+    user_experience_show_last_user_name: true
 
     #
     # windows_recovery
@@ -338,19 +338,19 @@
     winrm_configuration_display_config: false
 
   roles:
+    - dotnet_optimize
     - system_hostname
     - etc_hosts
     - dns_client
     - system_time
+    #- system_update
     #- system_locale
     - accounts_local
     - boot_configuration
-    - winrm_configuration
     - network_configuration
+    - winrm_configuration
     - sshd_configuration
     - rdp_configuration
-    #- system_update
-    #- dotnet_optimize
     #- windows_recovery
     - performance_tuning
     #- service_enablement
