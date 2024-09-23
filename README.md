@@ -22,8 +22,8 @@ for all the configuration options these roles support and how they
 could be used together.
 
 This collection provides roles to setup OpenSSH SSH Server (sshd) and
-WinRM (Basic+HTTPS) based remote access automatically on recent Windows
-Server versions. For full details on WinRM configuration, see
+WinRM (Basic-over-HTTPS) based remote access automatically on recent
+Windows Server versions. For full details on WinRM configuration, see
 [Windows Remote Management for Ansible](https://docs.ansible.com/ansible/latest/user_guide/windows_winrm.html).
 
 For Ansible Windows Guides, see:  
