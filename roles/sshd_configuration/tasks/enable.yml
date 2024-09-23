@@ -4,9 +4,9 @@
     error_action: stop
     script: |
       $Ansible.Changed = $false
-      if (Get-WindowsCapability -Name OpenSSH.Server -Online | ? State -ne 'Installed') {
-        $Ansible.Changed = $true
-        Add-WindowsCapability -Name OpenSSH.Server -Online
+      $missing = Get-WindowsCapability -Name 'OpenSSH.Server*' -Online | ? State -ne 'Installed'
+      if ($missing) {
+        Add-WindowsCapability -Name $missing.Name -Online
       }
   when: sshd_configuration_install | bool
 
