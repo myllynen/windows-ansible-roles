@@ -244,6 +244,8 @@
     #
     # NB. Configuring keyboard for Welcome Screen is notoriously difficult, this
     # role may or may not work reliably and may need more than round to apply ok
+    #
+    # NB. This role is currently at most experimental and probably should not be used!
 
     # https://docs.microsoft.com/windows/win32/intl/table-of-geographical-locations
     system_locale_location: 77
@@ -346,7 +348,7 @@
     - etc_hosts
     - dns_client
     - system_time
-    #- system_update
+    ##- system_update
     #- system_locale
     - accounts_local
     - boot_configuration
