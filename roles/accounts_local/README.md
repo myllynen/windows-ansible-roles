@@ -16,8 +16,8 @@ accounts_local_administrator_enable: true
 # Enable or disable Ansible user password expiration
 accounts_local_ansible_user_password_expires: false
 
-# Show or hide Ansible user in Welcome Screen
-accounts_local_ansible_user_hide_in_welcome: true
+# Show or hide Ansible user on Welcome Screen
+accounts_local_ansible_user_show_on_welcome: false
 </pre>
 
 ## License

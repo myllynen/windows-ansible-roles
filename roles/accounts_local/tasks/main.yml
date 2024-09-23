@@ -1,18 +1,10 @@
 ---
-- name: Gather needed facts
-  ansible.windows.setup:
-    gather_subset:
-      - '!all'
-      - '!min'
-      - user
-  when: ansible_facts.user_id is not defined
-
-- name: Fail if Administrator trying to disable own account
+- name: Fail if Administrator trying to disable self
   fail:
     msg: "Refusing to disable Administrator own account."
   when:
     - not accounts_local_administrator_enable | bool
-    - "'administrator' == ansible_facts.user_id | lower"
+    - ansible_user | lower == 'administrator'
 
 - name: Disable built-in Administrator account
   ansible.windows.win_user:
@@ -28,12 +20,14 @@
 
 - name: Configure password expiration for Ansible user
   ansible.windows.win_user:
-    name: "{{ ansible_facts.user_id }}"
+    name: "{{ ansible_user }}"
     password_never_expires: "{{ not accounts_local_ansible_user_password_expires | bool }}"
+  when: ansible_user | lower != 'administrator'
 
-- name: Configure showing Ansible user in Welcome Screen
+- name: Configure showing Ansible user on Welcome Screen
   ansible.windows.win_regedit:
     path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList
-    name: "{{ ansible_facts.user_id }}"
+    name: "{{ ansible_user }}"
     type: DWord
-    data: "{{ 1 if accounts_local_ansible_user_hide_in_welcome | bool else 0 }}"
+    data: "{{ 1 if accounts_local_ansible_user_show_on_welcome | bool else 0 }}"
+  when: ansible_user | lower != 'administrator'
