@@ -4,16 +4,16 @@
     path: HKLM:\SOFTWARE\Microsoft\ServerManager
     name: DoNotOpenServerManagerAtLogon
     type: DWord
-    data: "{{ 1 if user_experience_server_manager_disable | bool else 0 }}"
+    data: "{{ 0 if user_experience_server_manager_at_logon | bool else 1 }}"
 
-- name: Disable network location wizard
+- name: Configure new network location wizard
   ansible.windows.win_regedit:
     path: HKLM:\SYSTEM\CurrentControlSet\Control\Network\NewNetworkWindowOff
-  when: user_experience_network_location_wizard_disable | bool
+    state: "{{ 'absent' if user_experience_network_location_wizard | bool else 'present' }}"
 
-- name: Configure displaying last user name at Welcome Screen
+- name: Configure showing last user name on Welcome Screen
   ansible.windows.win_regedit:
     path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
     name: DontDisplayLastUserName
     type: DWord
-    data: "{{ 1 if user_experience_hide_last_user_name | bool else 0 }}"
+    data: "{{ 0 if user_experience_show_last_user_name | bool else 1 }}"
