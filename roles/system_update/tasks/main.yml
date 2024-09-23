@@ -1,5 +1,5 @@
 ---
-- name: Install all updates
+- name: Install updates
   vars:
     ansible_winrm_read_timeout_sec: "{{ system_update_reboot_timeout | int + 10 }}"
     ansible_winrm_operation_timeout_sec: "{{ system_update_reboot_timeout | int + 5 }}"
