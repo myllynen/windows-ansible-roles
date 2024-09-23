@@ -23,8 +23,10 @@ could be used together.
 
 This collection provides roles to setup OpenSSH SSH Server (sshd) and
 WinRM (Basic-over-HTTPS) based remote access automatically on recent
-Windows Server versions. For full details on WinRM configuration, see
-[Windows Remote Management for Ansible](https://docs.ansible.com/ansible/latest/user_guide/windows_winrm.html).
+Windows Server versions. For full description of WinRM configuration
+alternatives, see the upstream
+[Windows Remote Management for Ansible](https://docs.ansible.com/ansible/latest/user_guide/windows_winrm.html)
+guide.
 
 For Ansible Windows Guides, see:  
 [https://docs.ansible.com/ansible/latest/user_guide/windows.html](https://docs.ansible.com/ansible/latest/user_guide/windows.html)
