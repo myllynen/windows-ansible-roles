@@ -19,3 +19,15 @@
 - name: Display winrm service configuration
   ansible.builtin.debug:
     var: winrm_config_info.output
+
+- name: Check winrm listener configuration
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      winrm enumerate winrm/config/listener
+  register: winrm_listener_info
+  changed_when: false
+
+- name: Display winrm listener configuration
+  ansible.builtin.debug:
+    var: winrm_listener_info.output

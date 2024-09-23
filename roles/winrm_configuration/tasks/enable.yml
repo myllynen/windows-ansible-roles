@@ -10,21 +10,20 @@
     error_action: stop
     script: |
       $Ansible.Changed = $false
-      $friendlyName = "WinRM over HTTPS"
-      $cert = Get-ChildItem -Path Cert:\LocalMachine\My `
-        | Where-Object { $_.FriendlyName -eq $friendlyName }
-      $listener = winrm enumerate winrm/config/listener
+      $friendlyName = 'WinRM over HTTPS'
+      $cert = Get-ChildItem -Path Cert:\LocalMachine\My | ? FriendlyName -eq $friendlyName
+      $listener = Get-ChildItem -Path WSMan:\localhost\Listener -Recurse | ? Keys -contains 'Transport=HTTPS'
       if (-not $cert -and -not $listener) {
         $Ansible.Changed = $true
         $cert = New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My `
                   -DnsName $env:COMPUTERNAME -NotAfter (get-date).AddYears(10) `
-                  -Provider "Microsoft Enhanced RSA and AES Cryptographic Provider" `
+                  -Provider 'Microsoft Enhanced RSA and AES Cryptographic Provider' `
                   -KeyLength 4096
         $cert.FriendlyName = $friendlyName
-        winrm create winrm/config/Listener?Address=*+Transport=HTTPS `
-          '@{Hostname="'"$env:COMPUTERNAME"'";CertificateThumbprint="'$cert.Thumbprint'"}'
-        Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $true
+        New-Item -Path WSMan:\localhost\Listener -Transport HTTPS `
+          -Address * -CertificateThumbPrint $cert.Thumbprint -Force
         Set-Item -Path WSMan:\localhost\Service\AllowUnencrypted -Value $false
+        Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $true
       }
   when: winrm_configuration_https_enable | bool
 
