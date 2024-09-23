@@ -3,13 +3,14 @@
   ansible.windows.win_powershell:
     error_action: continue
     script: |
-      # From https://docs.ansible.com/ansible/latest/user_guide/windows_performance.html
-      $env:Path += [Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()
-      [AppDomain]::CurrentDomain.GetAssemblies() | foreach {
+      # From https://docs.ansible.com/ansible/latest/os_guide/windows_performance.html
+      $ngenPath = [System.IO.Path]::Combine([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory(), `
+                                            'ngen.exe')
+      [AppDomain]::CurrentDomain.GetAssemblies() | % {
         if (-not $_.Location) { continue }
         $name = Split-Path -Path $_.Location -Leaf
-        if ($name.StartsWith("Microsoft.PowerShell")) {
-          ngen.exe install $_.Location /nologo
+        if ($name.StartsWith('Microsoft.PowerShell')) {
+          & $ngenPath install $_.Location /nologo
         }
       }
   register: ngen_command
