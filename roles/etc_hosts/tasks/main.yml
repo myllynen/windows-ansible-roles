@@ -4,6 +4,7 @@
     gather_subset:
       - '!all'
       - '!min'
+      - network
       - platform
   when:
     - etc_hosts_self_add | bool
