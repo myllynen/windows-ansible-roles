@@ -221,6 +221,9 @@
     # Reboot after system hostname change
     system_hostname_reboot: true
 
+    #
+    # system_init
+    #
     # Log system initialization message on a fresh system
 
     # System initialization file
