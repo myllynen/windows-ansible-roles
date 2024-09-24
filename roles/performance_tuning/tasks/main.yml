@@ -33,3 +33,19 @@
   when:
     - page_file_reboot | bool
     - page_file_config is changed
+
+- name: Check current power scheme
+  ansible.windows.win_command: powercfg.exe /list
+  register: power_scheme_info
+  changed_when: false
+
+- name: Configure power scheme
+  vars:
+    current_name: "{{ (((power_scheme_info.stdout_lines | select('search', '\\*$'))[0] | split('('))[1]
+                        | replace(' ', '_'))[:-3] | lower }}"
+    current_guid: "{{ ((power_scheme_info.stdout_lines | select('search', '\\*$'))[0] | split(' '))[3] }}"
+    update_name: "{{ power_scheme | replace('_', ' ') }}"
+    update_guid: "{{ ((power_scheme_info.stdout_lines
+                       | select('search', update_name, ignorecase=true))[0] | split(' '))[3] }}"
+  ansible.windows.win_command: powercfg.exe /setactive {{ update_guid }}
+  when: current_guid != update_guid
