@@ -105,26 +105,26 @@
 
 - name: Enable sshd service
   ansible.windows.win_service:
-    state: started
     name: sshd
+    state: started
     start_mode: "{{ sshd_configuration_start_mode }}"
   register: service_start
 
 - name: Allow firewall SSH port
   community.windows.win_firewall_rule:
-    enabled: true
-    state: present
     name: OpenSSH SSH Server (sshd)
-    localport: 22
+    state: present
+    enabled: true
     action: allow
     direction: in
+    localport: 22
     protocol: tcp
     profiles: "{{ sshd_configuration_firewall_profiles | default(omit, true) }}"
 
 - name: Restart sshd service to apply configuration changes
   ansible.windows.win_service:
-    state: restarted
     name: sshd
+    state: restarted
     start_mode: auto
   when:
     - service_start is not changed

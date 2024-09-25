@@ -11,11 +11,11 @@
 
 - name: Block firewall SSH port
   community.windows.win_firewall_rule:
-    enabled: true
-    state: present
     name: OpenSSH SSH Server (sshd)
-    localport: 22
+    state: present
+    enabled: true
     action: block
     direction: in
+    localport: 22
     protocol: tcp
     profiles: "{{ sshd_configuration_firewall_profiles | default(omit, true) }}"

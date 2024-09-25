@@ -4,8 +4,8 @@
     ansible_winrm_read_timeout_sec: "{{ system_update_reboot_timeout | int + 10 }}"
     ansible_winrm_operation_timeout_sec: "{{ system_update_reboot_timeout | int + 5 }}"
   ansible.windows.win_updates:
-    state: "{{ system_update_state }}"
     category_names: "{{ system_update_categories }}"
+    state: "{{ system_update_state }}"
     reboot: false
   register: update_install
 

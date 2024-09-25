@@ -9,12 +9,12 @@
 
 - name: Block firewall RDP port
   community.windows.win_firewall_rule:
-    enabled: true
-    state: present
     name: Remote Desktop - User Mode (TCP-In)
-    localport: 3389
+    state: present
+    enabled: true
     action: block
     direction: in
+    localport: 3389
     protocol: tcp
     profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
   when: not rdp_configuration_enable | bool
@@ -36,12 +36,12 @@
 
 - name: Allow firewall RDP port
   community.windows.win_firewall_rule:
-    enabled: true
-    state: present
     name: Remote Desktop - User Mode (TCP-In)
-    localport: 3389
+    state: present
+    enabled: true
     action: allow
     direction: in
+    localport: 3389
     protocol: tcp
     profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
   when: rdp_configuration_enable | bool

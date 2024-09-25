@@ -3,10 +3,10 @@
   vars:
     ipv6_state: "{{ 'enabled' if network_configuration_ipv6_enable | bool else 'disabled' }}"
   community.windows.win_net_adapter_feature:
-    state: "{{ ipv6_state }}"
     interface: '*'
     component_id:
       - ms_tcpip6
+    state: "{{ ipv6_state }}"
   register: ipv6_config
 
 - name: Configure NetBIOS on all interfaces

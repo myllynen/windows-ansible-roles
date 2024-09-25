@@ -7,8 +7,8 @@
 
 - name: Disable unwanted services
   ansible.windows.win_service:
-    state: stopped
     name: "{{ item.item }}"
+    state: stopped
     start_mode: disabled
   loop: "{{ disable_services.results }}"
   loop_control:
@@ -23,8 +23,8 @@
 
 - name: Enable wanted services
   ansible.windows.win_service:
-    state: started
     name: "{{ item.item }}"
+    state: started
     start_mode: auto
   loop: "{{ enable_services.results }}"
   loop_control:

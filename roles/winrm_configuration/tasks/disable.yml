@@ -12,22 +12,22 @@
 
 - name: Block firewall WinRM HTTP port
   community.windows.win_firewall_rule:
-    enabled: true
-    state: present
     name: Windows Remote Management (HTTP-In)
-    localport: 5985
+    state: present
+    enabled: true
     action: block
     direction: in
+    localport: 5985
     protocol: tcp
     profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
 
 - name: Block firewall WinRM HTTPS port
   community.windows.win_firewall_rule:
-    enabled: true
-    state: present
     name: Windows Remote Management (HTTPS-In)
-    localport: 5986
+    state: present
+    enabled: true
     action: block
     direction: in
+    localport: 5986
     protocol: tcp
     profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
