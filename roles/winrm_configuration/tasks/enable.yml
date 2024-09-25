@@ -5,6 +5,18 @@
     state: started
     start_mode: "{{ winrm_configuration_start_mode }}"
 
+- name: Allow firewall WinRM HTTPS port
+  community.windows.win_firewall_rule:
+    name: Windows Remote Management (HTTPS-In)
+    state: present
+    enabled: true
+    action: allow
+    direction: in
+    localport: 5986
+    protocol: tcp
+    profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
+  when: winrm_configuration_https_enable | bool
+
 - name: Configure winrm service
   ansible.windows.win_powershell:
     error_action: stop
@@ -25,18 +37,6 @@
         Set-Item -Path WSMan:\localhost\Service\AllowUnencrypted -Value $false
         Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $true
       }
-  when: winrm_configuration_https_enable | bool
-
-- name: Allow firewall WinRM HTTPS port
-  community.windows.win_firewall_rule:
-    name: Windows Remote Management (HTTPS-In)
-    state: present
-    enabled: true
-    action: allow
-    direction: in
-    localport: 5986
-    protocol: tcp
-    profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
   when: winrm_configuration_https_enable | bool
 
 - name: Block firewall WinRM HTTP port
