@@ -49,7 +49,9 @@
     localport: 5985
     protocol: tcp
     profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
-  when: winrm_configuration_http_block | bool
+  when:
+    - ansible_winrm_port | default(0) != 5985
+    - winrm_configuration_http_block | bool
 
 - name: Display WinRM configuration
   include_tasks: display.yml
