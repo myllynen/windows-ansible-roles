@@ -30,7 +30,7 @@
       $Ansible.Changed = $false
       if (!(Test-Path -Path C:\ProgramData\ssh\administrators_authorized_keys)) {
         $Ansible.Changed = $true
-        New-Item -Path C:\ProgramData\ssh\administrators_authorized_keys
+        New-Item -Path C:\ProgramData\ssh\administrators_authorized_keys -ItemType File
       }
   register: ssh_admins_keys_file
 
