@@ -12,6 +12,7 @@
 - name: Display update results
   ansible.builtin.debug:
     var: update_install
+  when: system_update_display_results | bool
 
 - name: Reboot system
   ansible.windows.win_reboot:
@@ -22,11 +23,14 @@
     - system_update_reboot | bool
     - update_install.reboot_required
 
-- name: Compile all installed assemblies
+- name: Include role to compile assemblies
   vars:
     filter: "{{ system_update_compile_filter }}"
     filtered: "{{ update_install.updates | dict2items | selectattr('value.title', 'regex', filter) | length }}"
-  community.windows.win_dotnet_ngen:
+    dotnet_optimize_powershell: true
+    dotnet_optimize_all_assemblies: true
+  ansible.builtin.include_role:
+    name: dotnet_optimize
   when:
     - system_update_compile_assemblies | bool
     - filtered | int > 0

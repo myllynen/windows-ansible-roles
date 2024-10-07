@@ -14,6 +14,9 @@ Below are the role default values from defaults/main.yml:
 system_update_categories: '*'
 system_update_state: installed
 
+# Display update results
+system_update_display_results: true
+
 # Reboot if needed after updates
 system_update_reboot: true
 system_update_reboot_timeout: 1200
