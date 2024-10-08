@@ -1,14 +1,14 @@
 ---
-- name: Fail if trying to disable winrm using WinRM
+- name: Fail if trying to disable WinRM using WinRM
   fail:
-    msg: "Refusing to disable winrm when using WinRM."
+    msg: "Refusing to disable WinRM when using WinRM."
   when: ansible_connection == 'winrm' or
         ansible_connection == 'psrp'
 
-- name: Disable winrm service
+- name: Disable WinRM service
   ansible.windows.win_service:
     state: stopped
-    name: winrm
+    name: WinRM
 
 - name: Block firewall WinRM HTTP port
   community.windows.win_firewall_rule:

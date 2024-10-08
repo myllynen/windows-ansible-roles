@@ -1,14 +1,14 @@
 ---
-- name: Check winrm service details
+- name: Check WinRM service details
   ansible.windows.win_service_info:
-    name: winrm
+    name: WinRM
   register: winrm_service_info
 
-- name: Display winrm service details
+- name: Display WinRM service details
   ansible.builtin.debug:
     var: winrm_service_info.services[0]
 
-- name: Check winrm service configuration
+- name: Check WinRM service configuration
   ansible.windows.win_powershell:
     error_action: stop
     script: |
@@ -16,11 +16,11 @@
   register: winrm_config_info
   changed_when: false
 
-- name: Display winrm service configuration
+- name: Display WinRM service configuration
   ansible.builtin.debug:
     var: winrm_config_info.output
 
-- name: Check winrm listener configuration
+- name: Check WinRM listener configuration
   ansible.windows.win_powershell:
     error_action: stop
     script: |
@@ -28,6 +28,6 @@
   register: winrm_listener_info
   changed_when: false
 
-- name: Display winrm listener configuration
+- name: Display WinRM listener configuration
   ansible.builtin.debug:
     var: winrm_listener_info.output

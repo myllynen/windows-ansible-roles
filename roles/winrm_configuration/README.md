@@ -13,18 +13,29 @@ Below are the role default values from defaults/main.yml:
 # Enable or disable WinRM
 winrm_configuration_enable: true
 
-# By default Basic / HTTPS connections
-# will be enabled using a self-signed
-# certificate in case the winrm HTTPS
-# listener has not been configured yet.
-# Disable this to skip configuring winrm
+# WinRM service start mode: auto or delayed
+winrm_configuration_start_mode: auto
+
+# Enable Basic-over-HTTPS with self-signed cert
+# if WinRM HTTPS listener is not yet configured
 winrm_configuration_https_enable: true
 
-# Optionally ensure WinRM HTTP port is blocked
+# Optionally block WinRM HTTP port
 winrm_configuration_http_block: true
 
-# winrm service start mode: auto or delayed
-winrm_configuration_start_mode: auto
+# WinRM service configuration
+# CBT is None, Relaxed, or Strict
+winrm_configuration_service_config:
+  AllowUnencrypted: false
+  Auth:
+    Basic: true
+    Kerberos: true
+    Negotiate: true
+    Certificate: false
+    CredSSP: false
+    CbtHardeningLevel: Relaxed
+  IPv4Filter: '*'
+  IPv6Filter: '*'
 
 # Firewall profiles to apply rules
 winrm_configuration_firewall_profiles:

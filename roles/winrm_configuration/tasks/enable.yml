@@ -1,7 +1,7 @@
 ---
-- name: Enable winrm service
+- name: Enable WinRM service
   ansible.windows.win_service:
-    name: winrm
+    name: WinRM
     state: started
     start_mode: "{{ winrm_configuration_start_mode }}"
 
@@ -17,7 +17,7 @@
     profiles: "{{ winrm_configuration_firewall_profiles | default(omit, true) }}"
   when: winrm_configuration_https_enable | bool
 
-- name: Configure winrm service
+- name: Configure WinRM service HTTPS listener with self-signed cert
   ansible.windows.win_powershell:
     error_action: stop
     script: |
@@ -38,6 +38,46 @@
         Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $true
       }
   when: winrm_configuration_https_enable | bool
+
+- name: Configure WinRM service
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      $Ansible.Changed = $false
+      $key = '{{ item.key }}'
+      $value = '{{ item.value | to_json if item.value is mapping else item.value }}'
+      if ($value.StartsWith('{')) {
+        $hash = @{}
+        $value = $value | ConvertFrom-Json
+        $value.PSObject.Properties | ForEach-Object {
+          $hash[$_.Name] = $_.Value
+        }
+        $value = $hash
+      }
+      if ($key -ne 'Auth') {
+        $current = Get-ChildItem -Path WSMan:\localhost\Service\$key
+        if ($value.ToString().ToLower() -ne $current.Value.ToLower()) {
+          $Ansible.Changed = $true
+          Set-Item -Path WSMan:\localhost\Service\$key -Value $value
+        }
+      }
+      if ($key -eq 'Auth') {
+        $value.GetEnumerator() | ForEach-Object {
+          $k = $_.key
+          $v = $_.value
+          $current = Get-ChildItem -Path WSMan:\localhost\Service\Auth\$k
+          if ($k -eq 'CbtHardeningLevel') {
+            $v = (Get-Culture).TextInfo.ToTitleCase($v.ToLower())
+          }
+          if ($v.ToString().ToLower() -ne $current.Value.ToLower()) {
+            $Ansible.Changed = $true
+            Set-Item -Path WSMan:\localhost\Service\Auth\$k -Value $v
+          }
+        }
+      }
+  loop: "{{ winrm_configuration_service_config | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
 
 - name: Block firewall WinRM HTTP port
   community.windows.win_firewall_rule:
