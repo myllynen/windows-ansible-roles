@@ -1,5 +1,12 @@
 ---
+# ansible_user not available with become_user/loop
+- name: Set user for the next task
+  set_fact:
+    win_remote_user: "{{ ansible_user }}"
+
 - name: Install OpenSSH.Server capability
+  become: true
+  become_user: "{{ win_remote_user }}"
   ansible.windows.win_powershell:
     error_action: stop
     script: |
