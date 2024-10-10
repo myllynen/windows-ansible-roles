@@ -13,6 +13,7 @@
       $Ansible.Changed = $false
       $missing = Get-WindowsCapability -Name 'OpenSSH.Server*' -Online | ? State -ne 'Installed'
       if ($missing) {
+        $Ansible.Changed = $true
         Add-WindowsCapability -Name $missing.Name -Online
       }
   when: sshd_configuration_install | bool
