@@ -11,6 +11,7 @@ Below are the role default values from defaults/main.yml:
 <pre>
 ---
 # Compile PowerShell assemblies
+# used with Ansible connections
 dotnet_optimize_powershell: true
 
 # Compile all installed assemblies

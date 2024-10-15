@@ -1,8 +1,9 @@
 ---
 - name: Compile PowerShell assemblies
   ansible.windows.win_powershell:
-    error_action: continue
+    error_action: stop
     script: |
+      $Ansible.Changed = $false
       # From https://docs.ansible.com/ansible/latest/os_guide/windows_performance.html
       $ngenPath = [System.IO.Path]::Combine([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory(), `
                                             'ngen.exe')
@@ -10,12 +11,12 @@
         if (-not $_.Location) { continue }
         $name = Split-Path -Path $_.Location -Leaf
         if ($name.StartsWith('Microsoft.PowerShell')) {
-          & $ngenPath install $_.Location /nologo
+          $res = & $ngenPath install $_.Location /nologo
+          if ($res.Contains('Compiling assembly')) {
+            $Ansible.Changed = $true
+          }
         }
       }
-  register: ngen_command
-  changed_when: ngen_command.output[0] != "All compilation targets are up to date." or
-                ngen_command.output | unique | length > 1
   when: dotnet_optimize_powershell | bool
 
 - name: Compile all installed assemblies
