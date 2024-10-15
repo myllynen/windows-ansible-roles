@@ -3,6 +3,7 @@
 - name: Set user for the next task
   set_fact:
     win_remote_user: "{{ ansible_user }}"
+  when: sshd_configuration_install | bool
 
 - name: Install OpenSSH.Server capability
   become: true
