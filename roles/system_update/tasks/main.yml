@@ -16,8 +16,8 @@
 
 - name: Reboot system
   ansible.windows.win_reboot:
-    msg: "Ansible reboot after installing updates"
     reboot_timeout: "{{ system_update_reboot_timeout | float }}"
+    msg: "Ansible reboot after installing updates"
   register: reboot_status
   when:
     - system_update_reboot | bool
