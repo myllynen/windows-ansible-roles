@@ -7,17 +7,17 @@ winrm_configuration_start_mode: auto
 
 # Enable Basic-over-HTTPS with self-signed cert
 # if WinRM HTTPS listener is not yet configured
-winrm_configuration_https_enable: true
+winrm_configuration_https_enable: false
 
 # Optionally block WinRM HTTP port
-winrm_configuration_http_block: true
+winrm_configuration_http_block: false
 
 # WinRM service configuration
 # CBT is None, Relaxed, or Strict
 winrm_configuration_service_config:
   AllowUnencrypted: false
   Auth:
-    Basic: true
+    Basic: false
     Kerberos: true
     Negotiate: true
     Certificate: false
