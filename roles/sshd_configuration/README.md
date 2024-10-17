@@ -20,6 +20,9 @@ sshd_configuration_enable: true
 # This is not needed with Windows Server 2025.
 sshd_configuration_install: false
 
+# sshd service start mode: auto or delayed
+sshd_configuration_start_mode: auto
+
 # Default shell for sshd, this must be kept in
 # sync with ansible_shell_type to avoid errors
 # NB. Needs an absolute path
@@ -33,9 +36,6 @@ sshd_configuration_admins_keys:
 #    - ssh-rsa ... id_rsa.pub
 #  present:
 #    - ssh-ed25519 ... id_ed25519.pub
-
-# sshd service start mode: auto or delayed
-sshd_configuration_start_mode: auto
 
 # Firewall profiles to apply rules
 sshd_configuration_firewall_profiles:
