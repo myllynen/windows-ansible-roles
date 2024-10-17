@@ -1,192 +1,207 @@
 ---
-- name: Configure system locale
-  become: true
-  become_user: NT AUTHORITY\SYSTEM
+- name: Configure locale settings
   ansible.windows.win_powershell:
     error_action: stop
     script: |
       $Ansible.Changed = $false
 
-      if (!((Get-WmiObject -Class Win32_OperatingSystem).MUILanguages).Contains("{{ system_locale_ui }}")) {
+      $l = '{{ system_locale_input }}'
+      if ($l.Contains(',') -or $l.Contains(';') -or
+          (-not $l.Contains('-') -and -not $l.Contains(':'))) {
         $Ansible.Failed = $true
-        Write-Host "No language pack installed for {{ system_locale_ui }}."
+        Write-Host 'Value "{{ system_locale_input }}" for system_locale_input is invalid.'
         Exit 1
       }
 
-      if (!(Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Keyboard Layout' -Name IgnoreRemoteKeyboardLayout -ErrorAction Ignore)) {
-        $Ansible.Changed = $true
-        Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Keyboard Layout' -Name IgnoreRemoteKeyboardLayout -Type DWord -Value 1 -Force
+      # This is unreliable and not needed for formats and keyboards
+      #$locales = [System.Collections.Generic.HashSet[string]]@()
+      #[void]$locales.Add('{{ system_locale_system }}')
+      #[void]$locales.Add('{{ system_locale_ui }}')
+      #[void]$locales.Add('{{ system_locale_user }}')
+      #'{{ system_locale_input }}' -split ',' | % { [void]$locales.Add($_) }
+      #$locales | % {
+      #  $missing = Get-WindowsCapability -Name "Language.Basic~~~$_*" -Online | ? State -ne 'Installed'
+      #  if ($missing) {
+      #    $Ansible.Changed = $true
+      #    Add-WindowsCapability -Name $missing.Name -Online
+      #  }
+      #}
+
+      if (-not ((Get-WmiObject -Class Win32_OperatingSystem).MUILanguages).Contains('{{ system_locale_ui }}')) {
+        $Ansible.Failed = $true
+        Write-Host 'No MUI language pack installed for {{ system_locale_ui }}.'
+        Exit 1
       }
 
-      if ((Get-WinSystemLocale).Name -ne "{{ system_locale_system }}") {
+      #if (-not (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Keyboard Layout' -Name IgnoreRemoteKeyboardLayout -ErrorAction Ignore)) {
+      #  $Ansible.Changed = $true
+      #  Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Keyboard Layout' -Name IgnoreRemoteKeyboardLayout -Type DWord -Value 1
+      #}
+
+      if ((Get-WinHomeLocation).GeoId -ne '{{ system_locale_location }}') {
+        $Ansible.Changed = $true
+        Set-WinHomeLocation -GeoId {{ system_locale_location }}
+      }
+
+      if ((Get-WinSystemLocale).Name -ne '{{ system_locale_system }}') {
         $Ansible.Changed = $true
         Set-WinSystemLocale -SystemLocale {{ system_locale_system }}
       }
-      if ((Get-WinUILanguageOverride).TextInfo.CultureName -ne "{{ system_locale_ui }}") {
-        $Ansible.Changed = $true
-        Set-WinUILanguageOverride -Language {{ system_locale_ui }}
+
+      if ('{{ system_locale_ui }}' -ne '{{ system_locale_system }}' -or
+          '{{ system_locale_ui }}' -ne '{{ system_locale_user }}') {
+        if ((Get-WinUILanguageOverride).TextInfo.CultureName -ne '{{ system_locale_ui }}') {
+          $Ansible.Changed = $true
+          Set-WinUILanguageOverride -Language {{ system_locale_ui }}
+        }
       }
-      if ((Get-Culture).Name -ne "{{ system_locale_user }}") {
+
+      if ((Get-Culture).Name -ne '{{ system_locale_user }}') {
         $Ansible.Changed = $true
         Set-Culture -CultureInfo {{ system_locale_user }}
       }
-      $langTag = (Get-WinUserLanguageList)[0].LanguageTag
-      if (($langTag.Length -gt 2 -and $langTag -ne "{{ system_locale_input }}") -or
-          ($langTag.Length -eq 2 -and $langTag -ne "{{ system_locale_input[:2] }}")) {
-        $Ansible.Changed = $true
-        if ("{{ system_locale_ui }}" -eq "{{ system_locale_input }}") {
-          Set-WinUserLanguageList -LanguageList {{ system_locale_input }} -Force
-        } else {
-          Set-WinUserLanguageList -LanguageList {{ system_locale_input }},{{ system_locale_ui }} -Force
-        }
-      }
-      $lngid = '{0:x4}' -f (Get-Culture).LCID
-      $kbdid = '{0:x8}' -f (Get-Culture).LCID
-      if ((Get-WinDefaultInputMethodOverride).InputMethodTip -ne "$lngid`:$kbdid") {
-        $Ansible.Changed = $true
-        Set-WinDefaultInputMethodOverride -InputTip "$lngid`:$kbdid"
-      }
-      if ((Get-WinCultureFromLanguageListOptOut) -eq $false) {
-        $Ansible.Changed = $true
-        Set-WinCultureFromLanguageListOptOut -OptOut $true
-      }
-      if ((Get-WinHomeLocation).GeoId -ne "{{ system_locale_location }}") {
-        $Ansible.Changed = $true
-        Set-WinHomeLocation -GeoId {{ system_locale_location }}
-      }
-  register: system_locale
 
-- name: Reboot system
-  ansible.windows.win_reboot:
-    reboot_timeout: 600
-    msg: "Ansible reboot after locale configuration"
-  when: system_locale is changed
-
-- name: Configure current user locale
-  ansible.windows.win_powershell:
-    error_action: stop
-    script: |
-      $Ansible.Changed = $false
-
-      if (!((Get-WmiObject -Class Win32_OperatingSystem).MUILanguages).Contains("{{ system_locale_ui }}")) {
-        $Ansible.Failed = $true
-        Write-Host "No language pack installed for {{ system_locale_ui }}."
-        Exit 1
+      if (Get-WinDefaultInputMethodOverride) {
+        $Ansible.Changed = $true
+        Set-WinDefaultInputMethodOverride
       }
 
-      if ((Get-WinUILanguageOverride).TextInfo.CultureName -ne "{{ system_locale_ui }}") {
-        $Ansible.Changed = $true
-        Set-WinUILanguageOverride -Language {{ system_locale_ui }}
-      }
-      if ((Get-Culture).Name -ne "{{ system_locale_user }}") {
-        $Ansible.Changed = $true
-        Set-Culture -CultureInfo {{ system_locale_user }}
-      }
-      $langTag = (Get-WinUserLanguageList)[0].LanguageTag
-      if (($langTag.Length -gt 2 -and $langTag -ne "{{ system_locale_input }}") -or
-          ($langTag.Length -eq 2 -and $langTag -ne "{{ system_locale_input[:2] }}")) {
-        $Ansible.Changed = $true
-        if ("{{ system_locale_ui }}" -eq "{{ system_locale_input }}") {
-          Set-WinUserLanguageList -LanguageList {{ system_locale_input }} -Force
-        } else {
-          Set-WinUserLanguageList -LanguageList {{ system_locale_input }},{{ system_locale_ui }} -Force
-        }
-      }
-      $lngid = '{0:x4}' -f (Get-Culture).LCID
-      $kbdid = '{0:x8}' -f (Get-Culture).LCID
-      if ((Get-WinDefaultInputMethodOverride).InputMethodTip -ne "$lngid`:$kbdid") {
-        $Ansible.Changed = $true
-        Set-WinDefaultInputMethodOverride -InputTip "$lngid`:$kbdid"
-      }
-      if ((Get-WinCultureFromLanguageListOptOut) -eq $false) {
-        $Ansible.Changed = $true
-        Set-WinCultureFromLanguageListOptOut -OptOut $true
-      }
-      if ((Get-WinHomeLocation).GeoId -ne "{{ system_locale_location }}") {
-        $Ansible.Changed = $true
-        Set-WinHomeLocation -GeoId {{ system_locale_location }}
-      }
-  register: user_locale
+      $oldLangList = Get-WinUserLanguageList
 
-- name: Reboot system
-  ansible.windows.win_reboot:
-    reboot_timeout: 600
-    msg: "Ansible reboot after locale configuration"
-  when: user_locale is changed
-
-- name: Check current user SID
-  ansible.windows.win_powershell:
-    error_action: stop
-    script: |
-      $Ansible.Changed = $false
-      $Ansible.Result = (Get-LocalUser "{{ ansible_winrm_user }}").SID.Value
-  register: user_sid
-
-# Remove once Copy-UserInternationalSettingsToSystem available
-- name: Configure Welcome Screen and new user keyboard
-  become: true
-  become_user: NT AUTHORITY\SYSTEM
-  ansible.windows.win_powershell:
-    error_action: stop
-    script: |
-      $Ansible.Changed = $false
-      $uiid = (New-WinUserLanguageList "{{ system_locale_ui }}").InputMethodTips.Split(":")[1]
-      $lcid = (New-WinUserLanguageList "{{ system_locale_input }}").InputMethodTips.Split(":")[1]
-      if ((Get-ItemPropertyValue -Path 'HKCU:\Keyboard Layout\Preload' -Name 1) -ne $lcid) {
-        $Ansible.Changed = $true
-        Set-ItemProperty -Path 'HKCU:\Keyboard Layout\Preload' -Name 1 -Value $lcid
-        if ($lcid -ne $uiid) {
-          Set-ItemProperty -Path 'HKCU:\Keyboard Layout\Preload' -Name 2 -Value $uiid
-        }
+      if ('{{ system_locale_input }}'.Contains('-')) {
+        $newLangList = New-WinUserLanguageList -Language {{ system_locale_input }}
+      } else {
+        $newLangList = New-WinUserLanguageList -Language {{ system_locale_user }}
+        $newLangList[0].InputMethodTips.Clear()
+        $newLangList[0].InputMethodTips.Add('{{ system_locale_input }}')
+        $tip = (New-WinUserLanguageList -Language '{{ system_locale_user }}').InputMethodTips
+        $newLangList[0].InputMethodTips.Add($tip)
       }
-      $sid = "{{ user_sid.result }}"
-      if ((Get-ItemPropertyValue -Path "Registry::HKEY_USERS\$sid\Keyboard Layout\Preload" -Name 1) -ne $lcid) {
-        $Ansible.Changed = $true
-        Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Keyboard Layout\Preload" -Name 1 -Value $lcid
-        if ($lcid -ne $uiid) {
-          Set-ItemProperty -Path "Registry::HKEY_USERS\$sid\Keyboard Layout\Preload" -Name 2 -Value $uuid
-        }
-      }
-      if ((Get-ItemPropertyValue -Path 'Registry::HKEY_USERS\.DEFAULT\Keyboard Layout\Preload' -Name 1) -ne $lcid) {
-        $Ansible.Changed = $true
-        Set-ItemProperty -Path 'Registry::HKEY_USERS\.DEFAULT\Keyboard Layout\Preload' -Name 1 -Value $lcid
-        if ($lcid -ne $uiid) {
-          Set-ItemProperty -Path 'Registry::HKEY_USERS\.DEFAULT\Keyboard Layout\Preload' -Name 2 -Value $uuid
-        }
-      }
-  register: welcome_config
 
-- name: Reboot system
-  ansible.windows.win_reboot:
-    reboot_timeout: 600
-    msg: "Ansible reboot after locale configuration"
-  when: welcome_config is changed
+      if ($oldLangList.Length -ne 1 -or
+          (Compare-Object -ReferenceObject $oldLangList[0] -DifferenceObject $newLangList[0] `
+            -Property LanguageTag, InputMethodTips)) {
+        $Ansible.Changed = $true
+        Set-WinUserLanguageList -LanguageList $newLangList -Force
+      }
 
-- name: Check Copy-UserInternationalSettingsToSystem cmdlet
+      # Try to set the current user default keyboard layout as Windows installer does
+      $def = Get-ItemPropertyValue -Path 'HKCU:\Keyboard Layout\Preload' -Name 1
+      if ('{{ system_locale_input }}'.Contains(':') -and -not $def.StartsWith('d')) {
+        $Ansible.Changed = $true
+        $alt = Get-ItemPropertyValue -Path 'HKCU:\Keyboard Layout\Preload' -Name 2
+        Set-ItemProperty -Path 'HKCU:\Keyboard Layout\Preload' -Name 1 -Value $alt
+        Set-ItemProperty -Path 'HKCU:\Keyboard Layout\Preload' -Name 2 -Value $def
+      }
+
+      # This is crazy, but seems to be the only way to reliably to set the default layout in Welcome Screen
+      $sid = (Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\SystemProtectedUserData\').PSChildName.ToString()
+      $path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\SystemProtectedUserData\$sid\AnyoneRead\LanguageProfile"
+      $data = Get-ItemPropertyValue -Path $path -Name Profile
+      $orig = $data
+      $data = $data -replace '#Languages\+M.*@&', "#Languages+M{{ system_locale_user }}@&"
+      if ('{{ system_locale_input }}'.Contains('-')) {
+        $d1 = (New-WinUserLanguageList -Language '{{ system_locale_input }}').InputMethodTips
+        $prof = "Profile/{{ system_locale_input }}#$d1+D1"
+      } else {
+        $d1 = '{{ system_locale_input }}'
+        $d2 = (New-WinUserLanguageList -Language '{{ system_locale_user }}').InputMethodTips
+        $prof = "Profile/{{ system_locale_user }}#$d1+D1&$d2+D2"
+      }
+      $data = $data -replace 'Profile/.*', $prof
+      if ($data -ne $orig) {
+        $Ansible.Changed = $true
+        Set-ItemProperty -Path $path -Name Profile -Value $data
+      }
+
+      if ((Get-WinCultureFromLanguageListOptOut) -eq $true) {
+        $Ansible.Changed = $true
+        Set-WinCultureFromLanguageListOptOut -OptOut $false
+      }
+  register: locale_config
+
+- name: Check for Copy-UserInternationalSettingsToSystem cmdlet
   ansible.windows.win_powershell:
     error_action: stop
     script: |
       $Ansible.Changed = $false
       if ((Get-Command -Name Copy-UserInternationalSettingsToSystem -ErrorAction Ignore)) {
-        Write-Host "Cmdlet Copy-UserInternationalSettingsToSystem is available."
+        Write-Host 'Cmdlet Copy-UserInternationalSettingsToSystem is available.'
       } else {
-        Write-Host "Cmdlet Copy-UserInternationalSettingsToSystem not found."
+        Write-Host 'Cmdlet Copy-UserInternationalSettingsToSystem not found.'
       }
   register: copy_cmdlet
+  when: system_locale_welcome_screen_update_always | bool or
+        locale_config is changed
 
-- name: Copy changed locale settings to Welcome Screen and new user accounts
+- name: Copy locale settings to Welcome Screen and for new users
   ansible.windows.win_powershell:
     error_action: stop
     script: |
       Copy-UserInternationalSettingsToSystem -WelcomeScreen $true -NewUser $true
+
+      New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS
+
+      # Try to set the default keyboard layout as Windows installer does
+      $def = Get-ItemPropertyValue -Path 'HKU:\.DEFAULT\Keyboard Layout\Preload' -Name 1
+      if ('{{ system_locale_input }}'.Contains(':') -and -not $def.StartsWith('d')) {
+        $alt = Get-ItemPropertyValue -Path 'HKU:\.DEFAULT\Keyboard Layout\Preload' -Name 2
+        Set-ItemProperty -Path 'HKU:\.DEFAULT\Keyboard Layout\Preload' -Name 1 -Value $alt
+        Set-ItemProperty -Path 'HKU:\.DEFAULT\Keyboard Layout\Preload' -Name 2 -Value $def
+      }
+
+      Remove-PSDrive HKU
   register: welcome_config
   when:
+    - system_locale_welcome_screen_update_always | bool or
+      locale_config is changed
     - "'is available' in copy_cmdlet.host_out"
-    - system_locale is changed or
-      user_locale is changed
+
+# Remove once Copy-UserInternationalSettingsToSystem available on all supported versions
+- name: Configure Welcome Screen and new user settings (legacy method)
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS
+
+      # From community/windows/plugins/modules/win_region.ps1
+      Function Copy-RegistryKey($source, $target) {
+        Copy-Item -LiteralPath $source -Destination $target
+        foreach ($key in Get-ChildItem -LiteralPath $source) {
+          $sourceKey = "$source\$($key.PSChildName)"
+          $targetKey = (Get-Item -LiteralPath $source).PSChildName
+          Copy-RegistryKey -source "$sourceKey" -target "$target\$targetKey"
+        }
+      }
+
+      $sids = '.DEFAULT', 'S-1-5-18', 'S-1-5-19', 'S-1-5-20'
+      foreach ($sid in $sids) {
+        Copy-RegistryKey -source "HKCU:\Keyboard Layout" -target "HKU:\$sid"
+        Copy-RegistryKey -source "HKCU:\Control Panel\Input Method" -target "HKU:\$sid\Control Panel"
+        Copy-RegistryKey -source "HKCU:\Control Panel\International" -target "HKU:\$sid\Control Panel"
+
+        # Try to set the default keyboard layout as Windows installer does
+        $def = Get-ItemPropertyValue -Path "HKU:\$sid\Keyboard Layout\Preload" -Name 1
+        if ('{{ system_locale_input }}'.Contains(':') -and -not $def.StartsWith('d')) {
+          $alt = Get-ItemPropertyValue -Path "HKU:\$sid\Keyboard Layout\Preload" -Name 2
+          Set-ItemProperty -Path "HKU:\$sid\Keyboard Layout\Preload" -Name 1 -Value $alt
+          Set-ItemProperty -Path "HKU:\$sid\Keyboard Layout\Preload" -Name 2 -Value $def
+        }
+      }
+
+      Remove-PSDrive HKU
+  register: legacy_config
+  when:
+    - system_locale_welcome_screen_update_always | bool or
+      locale_config is changed
+    - "'is available' not in copy_cmdlet.host_out"
 
 - name: Reboot system
   ansible.windows.win_reboot:
     reboot_timeout: 600
     msg: "Ansible reboot after locale configuration"
-  when: welcome_config is changed
+  when:
+    - system_locale_reboot | bool
+    - locale_config is changed or
+      welcome_config is changed or
+      legacy_config is changed
