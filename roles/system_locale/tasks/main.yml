@@ -13,30 +13,11 @@
         Exit 1
       }
 
-      # This is unreliable and not needed for formats and keyboards
-      #$locales = [System.Collections.Generic.HashSet[string]]@()
-      #[void]$locales.Add('{{ system_locale_system }}')
-      #[void]$locales.Add('{{ system_locale_ui }}')
-      #[void]$locales.Add('{{ system_locale_user }}')
-      #'{{ system_locale_input }}' -split ',' | % { [void]$locales.Add($_) }
-      #$locales | % {
-      #  $missing = Get-WindowsCapability -Name "Language.Basic~~~$_*" -Online | ? State -ne 'Installed'
-      #  if ($missing) {
-      #    $Ansible.Changed = $true
-      #    Add-WindowsCapability -Name $missing.Name -Online
-      #  }
-      #}
-
       if (-not ((Get-WmiObject -Class Win32_OperatingSystem).MUILanguages).Contains('{{ system_locale_ui }}')) {
         $Ansible.Failed = $true
         Write-Host 'No MUI language pack installed for {{ system_locale_ui }}.'
         Exit 1
       }
-
-      #if (-not (Get-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Keyboard Layout' -Name IgnoreRemoteKeyboardLayout -ErrorAction Ignore)) {
-      #  $Ansible.Changed = $true
-      #  Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Keyboard Layout' -Name IgnoreRemoteKeyboardLayout -Type DWord -Value 1
-      #}
 
       if ((Get-WinHomeLocation).GeoId -ne '{{ system_locale_location }}') {
         $Ansible.Changed = $true
