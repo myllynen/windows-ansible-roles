@@ -29,12 +29,10 @@
         Set-WinSystemLocale -SystemLocale {{ system_locale_system }}
       }
 
-      if ('{{ system_locale_ui }}' -ne '{{ system_locale_system }}' -or
-          '{{ system_locale_ui }}' -ne '{{ system_locale_user }}') {
-        if ((Get-WinUILanguageOverride).TextInfo.CultureName -ne '{{ system_locale_ui }}') {
-          $Ansible.Changed = $true
-          Set-WinUILanguageOverride -Language {{ system_locale_ui }}
-        }
+      if ($null -ne (Get-WinUILanguageOverride) -and
+          (Get-WinUILanguageOverride).TextInfo.CultureName -ne '{{ system_locale_ui }}') {
+        $Ansible.Changed = $true
+        Set-WinUILanguageOverride -Language {{ system_locale_ui }}
       }
 
       if ((Get-Culture).Name -ne '{{ system_locale_user }}') {
@@ -51,6 +49,9 @@
 
       if ('{{ system_locale_input }}'.Contains('-')) {
         $newLangList = New-WinUserLanguageList -Language {{ system_locale_input }}
+        if ('{{ system_locale_input }}' -ne '{{ system_locale_user }}') {
+          $newLangList += New-WinUserLanguageList -Language {{ system_locale_user }}
+        }
       } else {
         $newLangList = New-WinUserLanguageList -Language {{ system_locale_user }}
         $newLangList[0].InputMethodTips.Clear()
@@ -59,9 +60,12 @@
         $newLangList[0].InputMethodTips.Add($tip)
       }
 
-      if ($oldLangList.Length -ne 1 -or
+      if ($oldLangList.Length -gt 2 -or
           (Compare-Object -ReferenceObject $oldLangList[0] -DifferenceObject $newLangList[0] `
-            -Property LanguageTag, InputMethodTips)) {
+            -Property LanguageTag, InputMethodTips) -or
+          ($oldLangList.Length -gt 1 -and
+            (Compare-Object -ReferenceObject $oldLangList[1] -DifferenceObject $newLangList[1] `
+              -Property LanguageTag, InputMethodTips))) {
         $Ansible.Changed = $true
         Set-WinUserLanguageList -LanguageList $newLangList -Force
       }
@@ -78,21 +82,23 @@
       # This is crazy, but seems to be the only way to reliably to set the default layout in Welcome Screen
       $sid = (Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\SystemProtectedUserData\').PSChildName.ToString()
       $path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\SystemProtectedUserData\$sid\AnyoneRead\LanguageProfile"
-      $data = Get-ItemPropertyValue -Path $path -Name Profile
-      $orig = $data
-      $data = $data -replace '#Languages\+M.*@&', "#Languages+M{{ system_locale_user }}@&"
-      if ('{{ system_locale_input }}'.Contains('-')) {
-        $d1 = (New-WinUserLanguageList -Language '{{ system_locale_input }}').InputMethodTips
-        $prof = "Profile/{{ system_locale_input }}#$d1+D1"
-      } else {
-        $d1 = '{{ system_locale_input }}'
-        $d2 = (New-WinUserLanguageList -Language '{{ system_locale_user }}').InputMethodTips
-        $prof = "Profile/{{ system_locale_user }}#$d1+D1&$d2+D2"
-      }
-      $data = $data -replace 'Profile/.*', $prof
-      if ($data -ne $orig) {
-        $Ansible.Changed = $true
-        Set-ItemProperty -Path $path -Name Profile -Value $data
+      if (Test-Path -Path $path) {
+        $data = Get-ItemPropertyValue -Path $path -Name Profile
+        $orig = $data
+        $data = $data -replace '#Languages\+M.*@&', "#Languages+M{{ system_locale_user }}@&"
+        if ('{{ system_locale_input }}'.Contains('-')) {
+          $d1 = (New-WinUserLanguageList -Language '{{ system_locale_input }}').InputMethodTips
+          $prof = "Profile/{{ system_locale_input }}#$d1+D1"
+        } else {
+          $d1 = '{{ system_locale_input }}'
+          $d2 = (New-WinUserLanguageList -Language '{{ system_locale_user }}').InputMethodTips
+          $prof = "Profile/{{ system_locale_user }}#$d1+D1&$d2+D2"
+        }
+        $data = $data -replace 'Profile/.*', $prof
+        if ($data -ne $orig) {
+          $Ansible.Changed = $true
+          Set-ItemProperty -Path $path -Name Profile -Value $data
+        }
       }
 
       if ((Get-WinCultureFromLanguageListOptOut) -eq $true) {
