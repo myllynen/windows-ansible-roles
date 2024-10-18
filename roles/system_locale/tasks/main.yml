@@ -5,17 +5,17 @@
     script: |
       $Ansible.Changed = $false
 
+      if (-not (Get-WmiObject -Class Win32_OperatingSystem).MUILanguages.Contains('{{ system_locale_ui }}')) {
+        $Ansible.Failed = $true
+        Write-Host 'No MUI language pack installed for {{ system_locale_ui }}.'
+        Exit 1
+      }
+
       $l = '{{ system_locale_input }}'
       if ($l.Contains(',') -or $l.Contains(';') -or
           (-not $l.Contains('-') -and -not $l.Contains(':'))) {
         $Ansible.Failed = $true
         Write-Host 'Value "{{ system_locale_input }}" for system_locale_input is invalid.'
-        Exit 1
-      }
-
-      if (-not ((Get-WmiObject -Class Win32_OperatingSystem).MUILanguages).Contains('{{ system_locale_ui }}')) {
-        $Ansible.Failed = $true
-        Write-Host 'No MUI language pack installed for {{ system_locale_ui }}.'
         Exit 1
       }
 
@@ -29,7 +29,12 @@
         Set-WinSystemLocale -SystemLocale {{ system_locale_system }}
       }
 
-      if ($null -ne (Get-WinUILanguageOverride) -and
+      if ((Get-WmiObject -Class Win32_OperatingSystem).MUILanguages.Length -eq 1 -and
+          $null -ne (Get-WinUILanguageOverride)) {
+        $Ansible.Changed = $true
+        Set-WinUILanguageOverride
+      }
+      if ((Get-WmiObject -Class Win32_OperatingSystem).MUILanguages.Length -gt 1 -and
           (Get-WinUILanguageOverride).TextInfo.CultureName -ne '{{ system_locale_ui }}') {
         $Ansible.Changed = $true
         Set-WinUILanguageOverride -Language {{ system_locale_ui }}
@@ -50,13 +55,15 @@
       if ('{{ system_locale_input }}'.Contains('-')) {
         $newLangList = New-WinUserLanguageList -Language {{ system_locale_input }}
         if ('{{ system_locale_input }}' -ne '{{ system_locale_user }}') {
-          $newLangList += New-WinUserLanguageList -Language {{ system_locale_user }}
+          $newLangList.Add('{{ system_locale_user }}')
         }
       } else {
-        $newLangList = New-WinUserLanguageList -Language {{ system_locale_user }}
+        $langHex = '0x' + ('{{ system_locale_input }}' -split ':')[0]
+        $langName = [cultureinfo]::GetCultureInfo([int]$langHex).Name
+        $newLangList = New-WinUserLanguageList -Language $langName
         $newLangList[0].InputMethodTips.Clear()
         $newLangList[0].InputMethodTips.Add('{{ system_locale_input }}')
-        $tip = (New-WinUserLanguageList -Language '{{ system_locale_user }}').InputMethodTips
+        $tip = (New-WinUserLanguageList -Language '{{ system_locale_user }}')[0].InputMethodTips
         $newLangList[0].InputMethodTips.Add($tip)
       }
 
@@ -87,11 +94,11 @@
         $orig = $data
         $data = $data -replace '#Languages\+M.*@&', "#Languages+M{{ system_locale_user }}@&"
         if ('{{ system_locale_input }}'.Contains('-')) {
-          $d1 = (New-WinUserLanguageList -Language '{{ system_locale_input }}').InputMethodTips
+          $d1 = (New-WinUserLanguageList -Language '{{ system_locale_input }}')[0].InputMethodTips
           $prof = "Profile/{{ system_locale_input }}#$d1+D1"
         } else {
           $d1 = '{{ system_locale_input }}'
-          $d2 = (New-WinUserLanguageList -Language '{{ system_locale_user }}').InputMethodTips
+          $d2 = (New-WinUserLanguageList -Language '{{ system_locale_user }}')[0].InputMethodTips
           $prof = "Profile/{{ system_locale_user }}#$d1+D1&$d2+D2"
         }
         $data = $data -replace 'Profile/.*', $prof
