@@ -12,6 +12,9 @@ Below are the role default values from defaults/main.yml:
 ---
 # Parameters for win_updates
 system_update_categories: '*'
+system_update_accept_list: []
+system_update_reject_list: []
+system_update_skip_optional: true
 system_update_state: installed
 
 # Display update results

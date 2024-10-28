@@ -5,6 +5,9 @@
     ansible_winrm_operation_timeout_sec: "{{ system_update_reboot_timeout | int + 5 }}"
   ansible.windows.win_updates:
     category_names: "{{ system_update_categories }}"
+    accept_list: "{{ system_update_accept_list | default(omit, true) }}"
+    reject_list: "{{ system_update_reject_list | default(omit, true) }}"
+    skip_optional: "{{ system_update_skip_optional | bool }}"
     state: "{{ system_update_state }}"
     reboot: false
   register: update_install
