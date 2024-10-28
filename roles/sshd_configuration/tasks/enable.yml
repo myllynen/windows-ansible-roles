@@ -8,6 +8,7 @@
 - name: Install OpenSSH.Server capability
   become: true
   become_user: "{{ win_remote_user }}"
+  check_mode: false
   ansible.windows.win_powershell:
     error_action: stop
     script: |
@@ -15,6 +16,7 @@
       $missing = Get-WindowsCapability -Name 'OpenSSH.Server*' -Online | ? State -ne 'Installed'
       if ($missing) {
         $Ansible.Changed = $true
+        if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
         Add-WindowsCapability -Name $missing.Name -Online
       }
   when: sshd_configuration_install | bool
@@ -33,12 +35,14 @@
     state: directory
 
 - name: Create administrators SSH key file
+  check_mode: false
   ansible.windows.win_powershell:
     error_action: stop
     script: |
       $Ansible.Changed = $false
       if (!(Test-Path -Path C:\ProgramData\ssh\administrators_authorized_keys)) {
         $Ansible.Changed = $true
+        if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
         New-Item -Path C:\ProgramData\ssh\administrators_authorized_keys -ItemType File
       }
   register: ssh_admins_keys_file
@@ -67,7 +71,7 @@
     - "'absent' in sshd_configuration_admins_keys or
        'present' in sshd_configuration_admins_keys"
 
-- name: Validate pending sshd configudation
+- name: Validate pending sshd configuration
   include_tasks: validate.yml
   when:
     - sshd_configuration_config_validate | bool

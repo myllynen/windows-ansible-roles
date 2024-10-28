@@ -1,5 +1,6 @@
 ---
 - name: Compile PowerShell assemblies
+  check_mode: false
   ansible.windows.win_powershell:
     error_action: stop
     script: |
@@ -11,9 +12,12 @@
         if (-not $_.Location) { continue }
         $name = Split-Path -Path $_.Location -Leaf
         if ($name.StartsWith('Microsoft.PowerShell')) {
-          $res = & $ngenPath install $_.Location /nologo
-          if ($res.Contains('Compiling assembly')) {
+          $images = & $ngenPath display $_.Location /nologo
+          if ($images -match 'pending' -or
+              $images -match 'not installed') {
             $Ansible.Changed = $true
+            if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
+            & $ngenPath install $_.Location /nologo
           }
         }
       }

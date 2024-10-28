@@ -1,5 +1,6 @@
 ---
 - name: Create temp sshd configuration file using template
+  check_mode: false
   ansible.windows.win_template:
     src: "{{ sshd_configuration_config_file }}"
     dest: C:\ProgramData\ssh\sshd_config.tmp
@@ -27,6 +28,7 @@
       {{ item.key }} {{ item.value }}
       {% endif %}
       {% endfor %}
+  check_mode: false
   ansible.windows.win_copy:
     content: "{{ file_content | regex_replace('\\n', '\\r\\n') }}"
     dest: C:\ProgramData\ssh\sshd_config.tmp
@@ -41,6 +43,7 @@
 # This issue is reported : https://github.com/ansible/ansible/issues/83958
 # NB. We do not remove the temp config for idempotency in subsequent runs.
 - name: Validate temp sshd configuration file
+  check_mode: false
   ansible.windows.win_powershell:
     error_action: stop
     script: |

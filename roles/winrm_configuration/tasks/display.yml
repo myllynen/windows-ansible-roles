@@ -9,6 +9,7 @@
     var: winrm_service_info.services[0]
 
 - name: Check WinRM service configuration
+  check_mode: false
   ansible.windows.win_powershell:
     error_action: stop
     script: |
@@ -21,6 +22,7 @@
     var: winrm_config_info.output
 
 - name: Check WinRM listener configuration
+  check_mode: false
   ansible.windows.win_powershell:
     error_action: stop
     script: |

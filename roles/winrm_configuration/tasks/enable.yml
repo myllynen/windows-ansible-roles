@@ -18,6 +18,7 @@
   when: winrm_configuration_https_enable | bool
 
 - name: Configure WinRM service HTTPS listener with self-signed cert
+  check_mode: false
   ansible.windows.win_powershell:
     error_action: stop
     script: |
@@ -27,6 +28,7 @@
       $listener = Get-ChildItem -Path WSMan:\localhost\Listener -Recurse | ? Keys -contains 'Transport=HTTPS'
       if (-not $cert -and -not $listener) {
         $Ansible.Changed = $true
+        if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
         $cert = New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My `
                   -DnsName $env:COMPUTERNAME -NotAfter (get-date).AddYears(10) `
                   -Provider 'Microsoft Enhanced RSA and AES Cryptographic Provider' `
@@ -40,6 +42,7 @@
   when: winrm_configuration_https_enable | bool
 
 - name: Configure WinRM service
+  check_mode: false
   ansible.windows.win_powershell:
     error_action: stop
     script: |
@@ -58,6 +61,7 @@
         $current = Get-ChildItem -Path WSMan:\localhost\Service\$key
         if ($value.ToString().ToLower() -ne $current.Value.ToLower()) {
           $Ansible.Changed = $true
+          if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
           Set-Item -Path WSMan:\localhost\Service\$key -Value $value
         }
       }
@@ -71,6 +75,7 @@
           }
           if ($v.ToString().ToLower() -ne $current.Value.ToLower()) {
             $Ansible.Changed = $true
+            if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
             Set-Item -Path WSMan:\localhost\Service\Auth\$k -Value $v
           }
         }

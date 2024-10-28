@@ -8,6 +8,7 @@
   when: ansible_facts.distribution_major_version is not defined
 
 - name: Check Windows Recovery Environment configuration
+  check_mode: false
   ansible.windows.win_command: ReAgentc.exe /info
   register: winre_info
   changed_when: false
@@ -17,23 +18,28 @@
     winre_disable: "{{ '$true' if not windows_recovery_enable | bool else '$false' }}"
     winre_enabled: "{{ '$true' if 'Enabled' in winre_info.stdout else '$false' }}"
     error_action: "{{ 'stop' if ansible_facts.distribution_major_version | int > 10 else 'continue' }}"
+  check_mode: false
   ansible.windows.win_powershell:
     error_action: "{{ error_action }}"
     script: |
       $Ansible.Changed = $false
       if ({{ winre_disable }} -eq $true -and {{ winre_enabled }} -eq $true) {
         $Ansible.Changed = $true
+        if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
         ReAgentc.exe /disable
       }
       if ({{ winre_disable }} -eq $true -and (Test-Path -Path C:\Recovery)) {
         $Ansible.Changed = $true
+        if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
         Remove-Item -Path C:\Recovery -Recurse -Force
       }
       #if ({{ winre_disable }} -eq $true -and (Test-Path -Path 'C:\$WinREAgent')) {
       #  $Ansible.Changed = $true
+      #  if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
       #  Remove-Item -Path 'C:\$WinREAgent' -Recurse -Force
       #}
       if ({{ winre_disable }} -eq $false -and {{ winre_enabled }} -eq $false) {
         $Ansible.Changed = $true
+        if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
         ReAgentc.exe /enable
       }

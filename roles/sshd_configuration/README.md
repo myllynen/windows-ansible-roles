@@ -44,6 +44,8 @@ sshd_configuration_firewall_profiles:
 
 # Enable sshd_config validatiion using a copy if
 # the file is about to be updated. Recommended.
+# NB. Works only after sshd has been started once
+# NB. The temp copy will be updated in check mode
 sshd_configuration_config_validate: true
 
 # sshd configuration file template to use

@@ -35,6 +35,7 @@
     - page_file_config is changed
 
 - name: Check current power scheme
+  check_mode: false
   ansible.windows.win_command: powercfg.exe /list
   register: power_scheme_info
   changed_when: false
@@ -47,5 +48,8 @@
     update_name: "{{ power_scheme | replace('_', ' ') }}"
     update_guid: "{{ ((power_scheme_info.stdout_lines
                        | select('search', update_name, ignorecase=true))[0] | split(' '))[3] }}"
-  ansible.windows.win_command: powercfg.exe /setactive {{ update_guid }}
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      powercfg.exe /setactive {{ update_guid }}
   when: current_guid != update_guid
