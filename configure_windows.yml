@@ -200,6 +200,8 @@
 
     # Enable sshd_config validatiion using a copy if
     # the file is about to be updated. Recommended.
+    # NB. Works only after sshd has been started once
+    # NB. The temp copy will be updated in check mode
     sshd_configuration_config_validate: true
 
     # sshd configuration file template to use
@@ -294,6 +296,9 @@
     #
     # Parameters for win_updates
     system_update_categories: '*'
+    system_update_accept_list: []
+    system_update_reject_list: []
+    system_update_skip_optional: true
     system_update_state: installed
 
     # Display update results
