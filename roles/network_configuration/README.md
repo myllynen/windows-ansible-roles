@@ -13,6 +13,9 @@ Below are the role default values from defaults/main.yml:
 # Enable or disable IPv6
 network_configuration_ipv6_enable: true
 
+# Enable or disable LMHOSTS lookup
+network_configuration_lmhosts_enable: true
+
 # Enable or disable NetBIOS
 network_configuration_netbios_enable: true
 

@@ -9,6 +9,14 @@
     state: "{{ ipv6_state }}"
   register: ipv6_config
 
+# https://github.com/ansible-collections/community.windows/issues/271
+- name: Configure LMHOSTS lookup setting
+  ansible.windows.win_regedit:
+    path: HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters
+    name: EnableLMHOSTS
+    type: DWord
+    data: "{{ 1 if network_configuration_netbios_enable | bool else 0 }}"
+
 - name: Configure NetBIOS on all interfaces
   vars:
     netbios_state: "{{ 'enabled' if network_configuration_netbios_enable | bool else 'disabled' }}"
