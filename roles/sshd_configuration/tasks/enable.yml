@@ -40,7 +40,7 @@
     error_action: stop
     script: |
       $Ansible.Changed = $false
-      if (!(Test-Path -Path C:\ProgramData\ssh\administrators_authorized_keys)) {
+      if (-not (Test-Path -Path C:\ProgramData\ssh\administrators_authorized_keys)) {
         $Ansible.Changed = $true
         if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
         New-Item -Path C:\ProgramData\ssh\administrators_authorized_keys -ItemType File
