@@ -8,7 +8,7 @@ system_locale_location: 244
 system_locale_system: en-US
 system_locale_ui: en-US
 system_locale_user: en-US
-# Either a locale name (en-US, fi-FI, etc) or a hex code pair (0409:0000040B)
+# A list of locale names (en-US;fi-FI) or hex code pairs (0409:0000040B;en-US)
 system_locale_input: en-US
 
 # Force updating Welcome screen settings even if locale config was not changed

@@ -12,9 +12,8 @@
         Exit 1
       }
 
-      $l = '{{ system_locale_input }}'
-      if ($l.Contains(',') -or $l.Contains(';') -or
-          (-not $l.Contains('-') -and -not $l.Contains(':'))) {
+      $sli = '{{ system_locale_input }}'
+      if ($sli -match ',' -or ($sli -notmatch '-' -and $sli -notmatch ':')) {
         $Ansible.Result = 'Invalid value "{{ system_locale_input }}" for system_locale_input.'
         $Ansible.Failed = $true
         Exit 1
@@ -57,66 +56,218 @@
         Set-WinDefaultInputMethodOverride
       }
 
-      $oldLangList = Get-WinUserLanguageList
+      #
+      # Configure input profiles like the Windows installer does
+      #
 
-      if ('{{ system_locale_input }}'.Contains('-')) {
-        $newLangList = New-WinUserLanguageList -Language {{ system_locale_input }}
-        if ('{{ system_locale_input }}' -ne '{{ system_locale_user }}') {
-          $newLangList.Add('{{ system_locale_user }}')
+      function Get-inputInfo($lang) {
+        try {
+          if ($lang.Contains('-')) {
+            $code = ('{0:x4}' -f [cultureinfo]::GetCultureInfo($lang).LCID).ToUpper()
+            $name = $lang
+            $tips = ((New-WinUserLanguageList -Language $lang)[0].InputMethodTips)[0]
+          } else {
+            $code = ($lang -split ':')[0]
+            $name = [cultureinfo]::GetCultureInfo([int]('0x' + $code)).Name
+            $tips = $lang
+          }
         }
-      } else {
-        $langHex = '0x' + ('{{ system_locale_input }}' -split ':')[0]
-        $langName = [cultureinfo]::GetCultureInfo([int]$langHex).Name
-        $newLangList = New-WinUserLanguageList -Language $langName
-        $newLangList[0].InputMethodTips.Clear()
-        $newLangList[0].InputMethodTips.Add('{{ system_locale_input }}')
-        $tip = (New-WinUserLanguageList -Language '{{ system_locale_user }}')[0].InputMethodTips
-        $newLangList[0].InputMethodTips.Add($tip)
+        catch {
+          $Ansible.Result = "Invalid input profile: $lang."
+          $Ansible.Failed = $true
+          Exit 1
+        }
+        return $code, $name, $tips
       }
 
-      if ($oldLangList.Length -gt 2 -or
-          (Compare-Object -ReferenceObject $oldLangList[0] -DifferenceObject $newLangList[0] `
-            -Property LanguageTag, InputMethodTips) -or
-          ($oldLangList.Length -gt 1 -and
-            (Compare-Object -ReferenceObject $oldLangList[1] -DifferenceObject $newLangList[1] `
-              -Property LanguageTag, InputMethodTips))) {
+      $inputLocales = '{{ system_locale_input }}'.TrimEnd(';') -split ';'
+      if ('{{ system_locale_user }}' -notin $inputLocales) {
+        $inputLocales += '{{ system_locale_user }}'
+      }
+
+      $inputConfig = [ordered]@{}
+      foreach ($item in $inputLocales) {
+        $code, $name, $tips = Get-inputInfo($item)
+        if ($tips -notin $inputConfig.Keys) {
+          $inputConfig.Add($tips, ($code, $name))
+        }
+      }
+      $inputSorted = [ordered]@{}
+      $key = ([string[]]$inputConfig.Keys)[0]
+      $inputSorted[$key] = $inputConfig[$key]
+      foreach ($key in $inputConfig.Keys | Select-Object -Skip 1 | Sort-Object -Property {$inputConfig[$_][0]}) {
+        $inputSorted[$key] = $inputConfig[$key]
+      }
+
+      $newLangList = New-WinUserLanguageList -Language $inputSorted[0][1]
+      $newLangList[0].InputMethodTips.Clear()
+      $newLangList[0].InputMethodTips.Add(([string[]]$inputSorted.Keys)[0])
+
+      foreach ($item in $inputSorted.GetEnumerator() | Select-Object -Skip 1) {
+        $i = [array]::IndexOf($newLangList.LanguageTag, $item.Value[1])
+        if ($i -eq -1) {
+          $newLangList.Add($item.Value[1])
+          $newLangList[-1].InputMethodTips.Clear()
+          $newLangList[-1].InputMethodTips.Add($item.Key)
+        } else {
+          if ($item.Key -notin $newLangList[$i].InputMethodTips) {
+            $newLangList[$i].InputMethodTips.Add($item.Key)
+          }
+        }
+      }
+
+      $oldLangList = Get-WinUserLanguageList
+
+      # LanguageTags may get shortened, e.g., fi-FI becomes fi after Set-WinUserLanguageList
+      $shortened = @{}
+      foreach ($item in $oldLangList.GetEnumerator()) {
+        if ($item.LanguageTag -notmatch '-') {
+          foreach ($tip in $item.InputMethodTips) {
+            if ($inputSorted.Keys -contains $tip) {
+              $shortened[$inputSorted[$tip][1]] = $item.LanguageTag
+              break
+            }
+          }
+        }
+      }
+
+      $needUpdate = $false
+      if (([array]($oldLangList)).Length -ne ([array]($newLangList)).Length) {
+        $needUpdate = $true
+      } else {
+        foreach ($i in 0..(([array]($oldLangList)).Length-1)) {
+          if (Compare-Object `
+               -ReferenceObject $oldLangList[$i] -DifferenceObject $newLangList[$i] `
+               -Property Autonym, InputMethodTips) {
+            $needUpdate = $true
+            break
+          }
+        }
+      }
+
+      if ($needUpdate) {
         $Ansible.Changed = $true
         if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
         Set-WinUserLanguageList -LanguageList $newLangList -Force
       }
 
-      # Try to set the current user default keyboard layout as Windows installer does
-      $def = Get-ItemPropertyValue -Path 'HKCU:\Keyboard Layout\Preload' -Name 1
-      if ('{{ system_locale_input }}'.Contains(':') -and -not $def.StartsWith('d')) {
+      # Set the current user default keyboard layout like the Windows installer does, usually
+      $needUpdate = $false
+      $props = (Get-Item -Path 'HKCU:\Keyboard Layout\Preload').Property | Sort-Object
+      if ($props.Length -ne ([string[]]$inputSorted.Keys).Length) {
+        $needUpdate = $true
+      } else {
+        foreach ($i in 1..(([string[]]$inputSorted.Keys).Length)) {
+          if ($i -eq 1) { $prefix = 'd001' } else { $prefix = '0000' }
+          $old = Get-ItemPropertyValue -Path 'HKCU:\Keyboard Layout\Preload' -Name $i
+          $new = $prefix + $inputSorted[$i-1][0].ToLower()
+          if ($old -ne $new) {
+            $needUpdate = $true
+            break
+          }
+        }
+      }
+      if ($needUpdate) {
         $Ansible.Changed = $true
         if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
-        $alt = Get-ItemPropertyValue -Path 'HKCU:\Keyboard Layout\Preload' -Name 2
-        Set-ItemProperty -Path 'HKCU:\Keyboard Layout\Preload' -Name 1 -Value $alt
-        Set-ItemProperty -Path 'HKCU:\Keyboard Layout\Preload' -Name 2 -Value $def
+        foreach ($i in 1..(([string[]]$inputSorted.Keys).Length)) {
+          if ($i -eq 1) { $prefix = 'd001' } else { $prefix = '0000' }
+          $new = $prefix + $inputSorted[$i-1][0].ToLower()
+          Set-ItemProperty -Path 'HKCU:\Keyboard Layout\Preload' -Name $i -Value $new
+        }
+        if ($props.Length -gt ([string[]]$inputSorted.Keys).Length) {
+          foreach ($i in (([string[]]$inputSorted.Keys).Length+1)..$props.Length) {
+            Remove-ItemProperty -Path 'HKCU:\Keyboard Layout\Preload' -Name $i
+          }
+        }
+      }
+
+      # Almost there ...
+      if (-not (Test-Path 'HKCU:\Keyboard Layout\Substitutes')) {
+        New-Item -Path 'HKCU:\Keyboard Layout\Substitutes'
+      }
+      $i = 0
+      $subs = @()
+      foreach ($key in $inputConfig.Keys) {
+        $l, $k = $key -split ':'
+        if (-not $k.EndsWith($l)) {
+          $i++
+          if ($i -eq 1) { $prefix = 'd001' } else { $prefix = '0000' }
+          $name = $prefix + $l.ToLower()
+          $subs += $name
+          try {
+            $curr = Get-ItemPropertyValue -Path 'HKCU:\Keyboard Layout\Substitutes' -Name $name
+          }
+          catch {
+            $curr = $null
+          }
+          if ($curr -ne $k.ToLower()) {
+            $Ansible.Changed = $true
+            if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
+            Set-ItemProperty -Path 'HKCU:\Keyboard Layout\Substitutes' -Name $name -Value $k.ToLower()
+          }
+        }
+      }
+      $props = (Get-Item -Path 'HKCU:\Keyboard Layout\Substitutes').Property
+      if ($props.Length -ne $i) {
+        foreach ($p in $props) {
+          if ($p -notin $subs) {
+            $Ansible.Changed = $true
+            if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
+            Remove-ItemProperty -Path 'HKCU:\Keyboard Layout\Substitutes' -Name $p
+          }
+        }
       }
 
       # This is crazy, but seems to be the only way to reliably to set the default layout in Welcome Screen
+      # Currently not supported to do this and above changes for other known users, would need to load hives
       $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
       $path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\SystemProtectedUserData\$sid\AnyoneRead\LanguageProfile"
       if (Test-Path -Path $path) {
-        $data = Get-ItemPropertyValue -Path $path -Name Profile
-        $orig = $data
-        $data = $data -replace '#Languages\+M.*@&', "#Languages+M{{ system_locale_user }}@&"
-        if ('{{ system_locale_input }}'.Contains('-')) {
-          $d1 = (New-WinUserLanguageList -Language '{{ system_locale_input }}')[0].InputMethodTips
-          $prof = "Profile/{{ system_locale_input }}#$d1+D1"
-        } else {
-          $d1 = '{{ system_locale_input }}'
-          $d2 = (New-WinUserLanguageList -Language '{{ system_locale_user }}')[0].InputMethodTips
-          $prof = "Profile/{{ system_locale_user }}#$d1+D1&$d2+D2"
+        # Try to avoid changes due to LanguageTag shortening
+        if ($Ansible.Changed) { $langRef = $newLangList } else { $langRef = $oldLangList }
+        $prof = Get-ItemPropertyValue -Path $path -Name Profile
+        $orig = $prof -replace 'CachedLanguageName\+S@Winlangdb\.dll,-\d+&', ''
+        $langStr = '#Languages+M'
+        foreach ($item in $langRef.LanguageTag) {
+          $name = $item
+          if ($shortened.Keys -contains $item) {
+            $name = $shortened[$item]
+          }
+          $langStr += $name + '@'
         }
-        $data = $data -replace 'Profile/.*', $prof
-        if ($data -ne $orig) {
+        $prof = $prof -replace '#Languages\+M.*@&', ($langStr + '&')
+        $langSorted = [ordered]@{}
+        # Sort by language while retaining input method order
+        foreach ($key in $inputConfig.Keys | `
+          Sort-Object -Property @{Expression = {$inputConfig[$_][1]}}, `
+                                @{Expression = {[array]::IndexOf($inputConfig.Keys, $_)}}) {
+          $langSorted[$key] = $inputConfig[$key]
+        }
+        $userStr = ''
+        $prevLang = $null
+        foreach ($item in $langSorted.GetEnumerator()) {
+          if ($prevLang -ne $item.Value[1]) {
+            $d = 1
+            $name = $item.Value[1]
+            if ($shortened.Keys -contains $item.Value[1]) {
+              $name = $shortened[$item.Value[1]]
+            }
+            $userStr += '%User Profile/' + $name + '#' + $item.Key + '+D' + $d
+          } else {
+            $d++
+            $userStr += '&' + $item.Key + '+D' + $d
+          }
+          $prevLang = $item.Value[1]
+        }
+        $prof = $prof -replace '%User Profile/.*', $userStr
+        if ($orig -ne $prof) {
           $Ansible.Changed = $true
           if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
-          Set-ItemProperty -Path $path -Name Profile -Value $data
+          Set-ItemProperty -Path $path -Name Profile -Value $prof
         }
       }
+
 
       if ((Get-WinCultureFromLanguageListOptOut) -eq $true) {
         $Ansible.Changed = $true
@@ -140,38 +291,26 @@
   when: system_locale_welcome_screen_update_always | bool or
         locale_config is changed
 
-- name: Copy locale settings to Welcome Screen and for new users
+- name: Copy locale settings to Welcome Screen and new users
   ansible.windows.win_powershell:
     error_action: stop
     script: |
       Copy-UserInternationalSettingsToSystem -WelcomeScreen $true -NewUser $true
-
-      New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS
-
-      # Try to set the default keyboard layout as Windows installer does
-      $def = Get-ItemPropertyValue -Path 'HKU:\.DEFAULT\Keyboard Layout\Preload' -Name 1
-      if ('{{ system_locale_input }}'.Contains(':') -and -not $def.StartsWith('d')) {
-        $alt = Get-ItemPropertyValue -Path 'HKU:\.DEFAULT\Keyboard Layout\Preload' -Name 2
-        Set-ItemProperty -Path 'HKU:\.DEFAULT\Keyboard Layout\Preload' -Name 1 -Value $alt
-        Set-ItemProperty -Path 'HKU:\.DEFAULT\Keyboard Layout\Preload' -Name 2 -Value $def
-      }
-
-      Remove-PSDrive HKU
   register: welcome_config
   when:
     - system_locale_welcome_screen_update_always | bool or
       locale_config is changed
     - "'is available' in copy_cmdlet.result"
 
-# Remove once Copy-UserInternationalSettingsToSystem available on all supported versions
-- name: Configure Welcome Screen and new user settings (legacy method)
+# Remove once Copy-UserInternationalSettingsToSystem is available on all supported versions
+- name: Copy locale settings to Welcome Screen and new users (legacy method)
   ansible.windows.win_powershell:
     error_action: stop
     script: |
       New-PSDrive -Name HKU -PSProvider Registry -Root HKEY_USERS
 
       # From community/windows/plugins/modules/win_region.ps1
-      Function Copy-RegistryKey($source, $target) {
+      function Copy-RegistryKey($source, $target) {
         Copy-Item -LiteralPath $source -Destination $target
         foreach ($key in Get-ChildItem -LiteralPath $source) {
           $sourceKey = "$source\$($key.PSChildName)"
@@ -182,17 +321,18 @@
 
       $sids = '.DEFAULT', 'S-1-5-18', 'S-1-5-19', 'S-1-5-20'
       foreach ($sid in $sids) {
-        Copy-RegistryKey -source "HKCU:\Keyboard Layout" -target "HKU:\$sid"
-        Copy-RegistryKey -source "HKCU:\Control Panel\Input Method" -target "HKU:\$sid\Control Panel"
-        Copy-RegistryKey -source "HKCU:\Control Panel\International" -target "HKU:\$sid\Control Panel"
-
-        # Try to set the default keyboard layout as Windows installer does
-        $def = Get-ItemPropertyValue -Path "HKU:\$sid\Keyboard Layout\Preload" -Name 1
-        if ('{{ system_locale_input }}'.Contains(':') -and -not $def.StartsWith('d')) {
-          $alt = Get-ItemPropertyValue -Path "HKU:\$sid\Keyboard Layout\Preload" -Name 2
-          Set-ItemProperty -Path "HKU:\$sid\Keyboard Layout\Preload" -Name 1 -Value $alt
-          Set-ItemProperty -Path "HKU:\$sid\Keyboard Layout\Preload" -Name 2 -Value $def
+        if (Test-Path -Path "HKU:\$sid\Keyboard Layout") {
+          Remove-Item -Path "HKU:\$sid\Keyboard Layout" -Recurse
         }
+        Copy-RegistryKey -source 'HKCU:\Keyboard Layout' -target "HKU:\$sid"
+        if (Test-Path -Path "HKU:\$sid\Control Panel\Input Method") {
+          Remove-Item -Path "HKU:\$sid\Control Panel\Input Method" -Recurse
+        }
+        Copy-RegistryKey -source 'HKCU:\Control Panel\Input Method' -target "HKU:\$sid\Control Panel"
+        if (Test-Path -Path "HKU:\$sid\Control Panel\International") {
+          Remove-Item -Path "HKU:\$sid\Control Panel\International" -Recurse
+        }
+        Copy-RegistryKey -source 'HKCU:\Control Panel\International' -target "HKU:\$sid\Control Panel"
       }
 
       Remove-PSDrive HKU
