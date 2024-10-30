@@ -45,11 +45,11 @@
     current_name: "{{ (((power_scheme_info.stdout_lines | select('search', '\\*$'))[0] | split('('))[1]
                         | replace(' ', '_'))[:-3] | lower }}"
     current_guid: "{{ ((power_scheme_info.stdout_lines | select('search', '\\*$'))[0] | split(' '))[3] }}"
-    update_name: "{{ power_scheme | replace('_', ' ') }}"
-    update_guid: "{{ ((power_scheme_info.stdout_lines
-                       | select('search', update_name, ignorecase=true))[0] | split(' '))[3] }}"
+    wanted_name: "{{ power_scheme | replace('_', ' ') }}"
+    wanted_guid: "{{ ((power_scheme_info.stdout_lines
+                       | select('search', wanted_name, ignorecase=true))[0] | split(' '))[3] }}"
   ansible.windows.win_powershell:
     error_action: stop
     script: |
-      powercfg.exe /setactive {{ update_guid }}
-  when: current_guid != update_guid
+      powercfg.exe /setactive {{ wanted_guid }}
+  when: current_guid != wanted_guid
