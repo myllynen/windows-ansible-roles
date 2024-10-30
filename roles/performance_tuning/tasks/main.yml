@@ -6,24 +6,43 @@
     type: DWord
     data: "{{ 0x80000000 if ntfs_last_access_time_update | bool else 0x80000001 }}"
 
-- name: Disable automatic page file
+- name: Configure automatic page file setting
   community.windows.win_pagefile:
-    automatic: false
-  when: page_file_size != 'auto'
+    automatic: "{{ true if page_file_size == 'auto' else false }}"
+  register: page_file_automatic
+
+- name: Reboot system
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after configuring page file"
+  when:
+    - page_file_reboot | bool
+    - page_file_automatic is changed
+
+- name: Check page file configuration
+  community.windows.win_pagefile:
+  register: page_file_status
 
 - name: Configure page file
   vars:
     disable_page_file: "{{ true if page_file_size == 'disabled' else false }}"
-    static_page_file: "{{ true if page_file_size != 'auto' and page_file_size != 'disabled' else false }}"
+    static_page_file: "{{ true if page_file_size != 'auto' and
+                                  page_file_size != 'disabled' and
+                                  page_file_size != 'system' else false }}"
     page_file_state: "{{ 'query' if page_file_size == 'auto' else 'present' }}"
+    need_override: "{{ true if page_file_size != 'auto' and page_file_size != 'system' and
+                               (page_file_size == 'disabled' or
+                                (page_file_size != page_file_status.pagefiles[0].initial_size or
+                                 page_file_size != page_file_status.pagefiles[0].maximum_size)) else false }}"
   community.windows.win_pagefile:
     state: "{{ 'absent' if disable_page_file else page_file_state }}"
-    drive: "{{ page_file_disk if static_page_file else omit }}"
+    drive: "{{ page_file_disk if static_page_file or page_file_size == 'system' else omit }}"
     automatic: "{{ true if page_file_size == 'auto' else false }}"
     remove_all: "{{ true if disable_page_file else false }}"
-    override: "{{ false if static_page_file else omit }}"
+    override: "{{ need_override }}"
     initial_size: "{{ page_file_size | int if static_page_file else omit }}"
     maximum_size: "{{ page_file_size | int if static_page_file else omit }}"
+    system_managed: "{{ true if page_file_size == 'system' else false }}"
   register: page_file_config
 
 - name: Reboot system

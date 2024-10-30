@@ -13,10 +13,11 @@ Below are the role default values from defaults/main.yml:
 # NTFS Last Access Time updates
 ntfs_last_access_time_update: false
 
-# Page file size configuration
+# Page file configuration
 # auto      - automatically managed
-# disabled  - page file disabled
+# disabled  - page file fully disabled
 # size      - static page file size in MB
+# system    - system managed page file size
 page_file_size: auto
 page_file_disk: C
 
