@@ -18,6 +18,9 @@
   when:
     - page_file_reboot | bool
     - page_file_automatic is changed
+    - page_file_size == 'auto' or
+      page_file_size == 'disabled' or
+      page_file_size == 'system'
 
 - name: Check page file configuration
   community.windows.win_pagefile:
