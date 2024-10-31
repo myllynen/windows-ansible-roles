@@ -32,14 +32,18 @@
     page_file_state: "{{ 'query' if page_file_size == 'auto' else 'present' }}"
     override_needed: "{{ true if page_file_size != 'auto' and page_file_size != 'system' and
                                  (page_file_size == 'disabled' or
-                                  (page_file_size != page_file_status.pagefiles[0].initial_size or
-                                   page_file_size != page_file_status.pagefiles[0].maximum_size)) else false }}"
+                                  (page_file_status.pagefiles | length and
+                                   (page_file_size != page_file_status.pagefiles[0].initial_size or
+                                    page_file_size != page_file_status.pagefiles[0].maximum_size))) else false }}"
+    static_to_system: "{{ page_file_size == 'system' and page_file_status.pagefiles | length and
+                          (page_file_status.pagefiles[0].initial_size != 0 or
+                           page_file_status.pagefiles[0].maximum_size != 0) }}"
   community.windows.win_pagefile:
     state: "{{ 'absent' if disable_page_file else page_file_state }}"
     drive: "{{ page_file_disk if static_page_file or page_file_size == 'system' else omit }}"
     automatic: "{{ true if page_file_size == 'auto' else false }}"
     remove_all: "{{ true if disable_page_file else false }}"
-    override: "{{ override_needed }}"
+    override: "{{ override_needed or static_to_system }}"
     initial_size: "{{ page_file_size | int if static_page_file else omit }}"
     maximum_size: "{{ page_file_size | int if static_page_file else omit }}"
     system_managed: "{{ true if page_file_size == 'system' else false }}"
