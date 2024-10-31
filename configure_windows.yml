@@ -146,6 +146,36 @@
     rdp_configuration_authenticate: true
 
     #
+    # registry_settings
+    #
+    # Registry settings to apply with ansible.windows.win_regedit
+    registry_settings:
+    #  - setting: Enable User Access Control (UAC)
+    #    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    #    name: EnableLUA
+    #    type: DWord
+    #    data: 1
+    #    reboot: true
+    #
+    #  - setting: Set system TEMP folder
+    #    path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment
+    #    name: TEMP
+    #    type: ExpandString
+    #    data: '%SystemRoot%\TEMP'
+    #    reboot: true
+    #
+    #  - setting: Set system TMP folder
+    #    path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment
+    #    name: TMP
+    #    type: ExpandString
+    #    data: '%SystemRoot%\TEMP'
+    #    reboot: true
+
+    # Reboot after registry changes
+    # Action depends on per-setting "reboot: true"
+    registry_settings_reboot: true
+
+    #
     # services_enablement
     #
     service_enablement_disable:
@@ -393,6 +423,7 @@
     - sshd_configuration
     - rdp_configuration
     #- windows_recovery
+    - registry_settings
     - performance_tuning
     #- service_enablement
     #- service_recovery
