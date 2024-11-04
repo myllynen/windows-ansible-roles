@@ -1,44 +1,30 @@
 ---
 # Registry settings to apply with ansible.windows.win_regedit
 registry_settings:
-#  - setting: Enable User Access Control (UAC)
+#  - setting: Enable User Account Control (UAC)
 #    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
 #    name: EnableLUA
 #    type: DWord
 #    data: 1
 #    reboot: true
 #
-#  # NB. This would replace %SystemRoot%\System32; with C:\Windows\System32
-#  # NB. The calling playbook must gather the needed facts for this to work
-#  # For example:
-#  # - name: Gather needed facts
-#  #   ansible.windows.setup:
-#  #     gather_subset:
-#  #       - '!all'
-#  #       - '!min'
-#  #       - env
-#  #   when: ansible_facts.env is not defined
-#  #- setting: Add C:\Tools to system Path
-#  #  path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment
-#  #  name: Path
-#  #  type: ExpandString
-#  #  data: "{{ ansible_facts.env.Path if 'C:\\Tools;' in ansible_facts.env.Path
-#  #                                   else ansible_facts.env.Path + 'C:\\Tools;' }}"
-#  #  reboot: true
-#
-#  - setting: Set system TEMP folder
-#    path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment
-#    name: TEMP
+#  - setting: Set WER local crash dump folder
+#    path: HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps
+#    name: DumpFolder
 #    type: ExpandString
-#    data: '%SystemRoot%\TEMP'
-#    reboot: true
+#    data: '%LOCALAPPDATA%\CrashDumps'
 #
-#  - setting: Set system TMP folder
-#    path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment
-#    name: TMP
-#    type: ExpandString
-#    data: '%SystemRoot%\TEMP'
-#    reboot: true
+#  - setting: Set WER local crash dump count
+#    path: HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps
+#    name: DumpCount
+#    type: DWord
+#    data: 10
+#
+#  - setting: Set WER local crash dump type
+#    path: HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps
+#    name: DumpType
+#    type: DWord
+#    data: 1
 #
 #  - setting: Enable new network location wizard
 #    path: HKLM:\SYSTEM\CurrentControlSet\Control\Network\NewNetworkWindowOff
