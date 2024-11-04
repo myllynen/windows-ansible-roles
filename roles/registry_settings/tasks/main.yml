@@ -4,6 +4,7 @@
     that:
       - "'setting' in item"
       - "'path' in item"
+      - "':' in item.path"
       - item.state | default('present') in ['absent', 'present']
       - (item.state | default('present') == 'absent' if 'name' not in item or
                                                         'type' not in item or
