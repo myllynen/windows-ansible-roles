@@ -221,9 +221,11 @@
 
       # This is crazy, but seems to be the only way to reliably to set the default layout in Welcome Screen
       # Currently not supported to do this and above changes for other known users, would need to load hives
+      $regPerm = [System.Security.AccessControl.RegistryRights]::FullControl
       $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
       $path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\SystemProtectedUserData\$sid\AnyoneRead\LanguageProfile"
-      if (Test-Path -Path $path) {
+      if ((Test-Path -Path $path) -and
+          (((Get-Acl -Path $path).Access | ? IdentityReference -match $env:USER).RegistryRights -eq $regPerm)) {
         # Try to avoid changes due to LanguageTag shortening
         if ($Ansible.Changed) { $langRef = $newLangList } else { $langRef = $oldLangList }
         $prof = Get-ItemPropertyValue -Path $path -Name Profile
