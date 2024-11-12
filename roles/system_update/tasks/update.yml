@@ -27,8 +27,9 @@
       register: reboot_status
       when:
         - system_update_reboot | bool
-        - update_install is failed or
-          update_install.reboot_required
+        - update_install.reboot_required or
+          (update_install is failed and
+           update_attempt != system_update_retry_count)
 
   when: update_install is not defined or
         update_install is failed
