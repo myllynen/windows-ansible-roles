@@ -1,0 +1,41 @@
+---
+- name: Attempt to install updates
+  block:
+    - name: Install updates
+      vars:
+        ansible_winrm_read_timeout_sec: "{{ system_update_reboot_timeout | int + 10 }}"
+        ansible_winrm_operation_timeout_sec: "{{ system_update_reboot_timeout | int + 5 }}"
+      ansible.windows.win_updates:
+        category_names: "{{ system_update_categories }}"
+        accept_list: "{{ system_update_accept_list | default(omit, true) }}"
+        reject_list: "{{ system_update_reject_list | default(omit, true) }}"
+        skip_optional: "{{ system_update_skip_optional | bool }}"
+        state: "{{ system_update_state }}"
+        reboot: false
+      register: update_result
+      ignore_errors: true
+
+    - name: Record update installation result
+      set_fact:
+        update_install: "{{ update_result }}"
+      when: update_result is not skipped
+
+    - name: Reboot system
+      ansible.windows.win_reboot:
+        reboot_timeout: "{{ system_update_reboot_timeout | float }}"
+        msg: "Ansible reboot after installing updates"
+      register: reboot_status
+      when:
+        - system_update_reboot | bool
+        - update_install is failed or
+          update_install.reboot_required
+
+  when: update_install is not defined or
+        update_install is failed
+
+- name: Pause before next update attempt
+  pause:
+    seconds: "{{ system_update_retry_delay }}"
+  when:
+    - update_install is failed
+    - update_attempt != system_update_retry_count

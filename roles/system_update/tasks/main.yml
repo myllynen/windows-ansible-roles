@@ -1,30 +1,20 @@
 ---
-- name: Install updates
-  vars:
-    ansible_winrm_read_timeout_sec: "{{ system_update_reboot_timeout | int + 10 }}"
-    ansible_winrm_operation_timeout_sec: "{{ system_update_reboot_timeout | int + 5 }}"
-  ansible.windows.win_updates:
-    category_names: "{{ system_update_categories }}"
-    accept_list: "{{ system_update_accept_list | default(omit, true) }}"
-    reject_list: "{{ system_update_reject_list | default(omit, true) }}"
-    skip_optional: "{{ system_update_skip_optional | bool }}"
-    state: "{{ system_update_state }}"
-    reboot: false
-  register: update_install
+- name: Include tasks to install updates
+  include_tasks:
+    file: update.yml
+  loop: "{{ range(1, system_update_retry_count | int + 1) }}"
+  loop_control:
+    loop_var: update_attempt
 
 - name: Display update results
-  ansible.builtin.debug:
+  debug:
     var: update_install
   when: system_update_display_results | bool
 
-- name: Reboot system
-  ansible.windows.win_reboot:
-    reboot_timeout: "{{ system_update_reboot_timeout | float }}"
-    msg: "Ansible reboot after installing updates"
-  register: reboot_status
-  when:
-    - system_update_reboot | bool
-    - update_install.reboot_required
+- name: Fail if updating did not succeed
+  fail:
+    msg: "Failed to install updates."
+  when: update_install is failed
 
 - name: Include role to compile assemblies
   vars:
@@ -32,7 +22,7 @@
     filtered: "{{ update_install.updates | dict2items | selectattr('value.title', 'regex', filter) | length }}"
     dotnet_optimize_powershell: true
     dotnet_optimize_all_assemblies: true
-  ansible.builtin.include_role:
+  include_role:
     name: dotnet_optimize
   when:
     - system_update_compile_assemblies | bool
