@@ -5,7 +5,7 @@
   register: winrm_service_info
 
 - name: Display WinRM service details
-  ansible.builtin.debug:
+  debug:
     var: winrm_service_info.services[0]
 
 - name: Check WinRM service configuration
@@ -18,7 +18,7 @@
   changed_when: false
 
 - name: Display WinRM service configuration
-  ansible.builtin.debug:
+  debug:
     var: winrm_config_info.output
 
 - name: Check WinRM listener configuration
@@ -31,5 +31,5 @@
   changed_when: false
 
 - name: Display WinRM listener configuration
-  ansible.builtin.debug:
+  debug:
     var: winrm_listener_info.output
