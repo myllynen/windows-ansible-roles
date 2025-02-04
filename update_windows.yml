@@ -1,0 +1,64 @@
+---
+- name: Update Windows
+  hosts: all
+  become: false
+  gather_facts: false
+  collections:
+    - myllynen.windows_ansible_roles
+  vars:
+    #
+    # Ansible WinRM configuration
+    #
+    ansible_connection: winrm
+    ansible_pipelining: true
+    ansible_winrm_port: 5985
+    ansible_winrm_scheme: http
+    ansible_winrm_transport: ntlm
+    ansible_winrm_message_encryption: always
+    ansible_winrm_server_cert_validation: ignore
+
+    ansible_winrm_user: winrm
+    ansible_winrm_password: Foobar_12
+
+    ansible_become_method: runas
+
+    #
+    # Ansible Windows/SSH configuration
+    #
+    #ansible_shell_type: powershell
+    #ansible_become_method: runas
+
+    #
+    # system_update
+    #
+    # Retry attempts and delay between retries
+    # for applying updates in case of failures
+    system_update_retry_count: 1
+    system_update_retry_delay: 30
+
+    # Parameters for win_updates
+    system_update_categories: '*'
+    system_update_accept_list: []
+    system_update_reject_list: []
+    system_update_skip_optional: false
+    system_update_state: installed
+
+    # Display update results
+    system_update_display_results: true
+
+    # Reboot if needed after updates
+    system_update_reboot: true
+    system_update_reboot_timeout: 1200
+
+    # Compile all installed assemblies
+    # This will happen only after updates
+    system_update_compile_assemblies: true
+
+    # Trigger compilation only when updates with
+    # the following description were part of the
+    # installed updates. Use '.*' for everything.
+    system_update_compile_filter: Cumulative Update
+
+  roles:
+    - dotnet_optimize
+    - system_update
