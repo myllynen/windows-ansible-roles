@@ -60,5 +60,4 @@
     system_update_compile_filter: Cumulative Update
 
   roles:
-    - dotnet_optimize
     - system_update
