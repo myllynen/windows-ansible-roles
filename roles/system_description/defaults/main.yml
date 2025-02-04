@@ -1,0 +1,7 @@
+---
+# System description to be configured in the system
+#
+# Use the empty string ("") to clear the current value
+#system_description_organization: Test Department
+#system_description_owner: Test Project ABC
+#system_description_description: Test VM 1234
