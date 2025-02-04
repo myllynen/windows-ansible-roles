@@ -14,7 +14,7 @@ tags:
   - configuration
   - infrastructure
 dependencies:
-  ansible.windows: ">=2.5.0"
+  ansible.windows: ">=2.7.0"
   community.windows: ">=2.3.0"
 repository: https://www.github.com/myllynen/windows-ansible-roles
 issues: https://www.github.com/myllynen/windows-ansible-roles/issues
