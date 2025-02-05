@@ -17,7 +17,7 @@
   when: ntp_config is changed
 
 - name: Configure timezone
-  ansible.windows.win_timezone:
+  community.windows.win_timezone:
     timezone: "{{ system_time_timezone }}"
   register: timezone_config
 
