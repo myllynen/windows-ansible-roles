@@ -12,7 +12,7 @@ Below are the role default values from defaults/main.yml:
 ---
 # Retry attempts and delay between retries
 # for applying updates in case of failures
-system_update_retry_count: 3
+system_update_retry_count: 1
 system_update_retry_delay: 30
 
 # Parameters for win_updates
