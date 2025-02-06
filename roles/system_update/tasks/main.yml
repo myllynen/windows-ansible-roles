@@ -6,9 +6,22 @@
   loop_control:
     loop_var: update_attempt
 
+- name: Record final update results
+  set_fact:
+    system_update_updates:
+      changed: "{{ true if update_combined.updates | length > 0 else false }}"
+      failed: "{{ update_install.failed }}"
+      failed_update_count: "{{ update_install.failed_update_count }}"
+      filtered_updates: "{{ update_install.filtered_updates }}"
+      found_update_count: "{{ update_install.found_update_count }}"
+      installed_update_count: "{{ update_combined.updates | length }}"
+      reboot_required: "{{ update_install.reboot_required }}"
+      rebooted: "{{ system_update_rebooted | default(false) }}"
+      updates: "{{ update_combined.updates }}"
+
 - name: Display update results
   debug:
-    var: update_install
+    var: system_update_updates
   when: system_update_display_results | bool
 
 - name: Fail if updating did not succeed
@@ -19,7 +32,7 @@
 - name: Include role to compile assemblies
   vars:
     filter: "{{ system_update_compile_filter }}"
-    filtered: "{{ update_install.updates | dict2items | selectattr('value.title', 'regex', filter) | length }}"
+    filtered: "{{ system_update_updates.updates | dict2items | selectattr('value.title', 'regex', filter) | length }}"
     dotnet_optimize_powershell: true
     dotnet_optimize_all_assemblies: true
   include_role:

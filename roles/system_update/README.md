@@ -15,6 +15,10 @@ Below are the role default values from defaults/main.yml:
 system_update_retry_count: 1
 system_update_retry_delay: 30
 
+# Retry applying updates also if updates were
+# installed, subject to the above retry count
+system_update_retry_after_install: true
+
 # Parameters for win_updates
 system_update_categories: '*'
 system_update_accept_list: []
