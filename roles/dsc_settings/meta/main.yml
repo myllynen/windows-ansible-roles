@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  role_name: dsc_settings
+  author: Marko Myllynen <myllynen@redhat.com>
+  company: Red Hat, Inc.
+  description: dsc_settings role
+  license: GPLv3+
+  min_ansible_version: "2.18"
+  platforms:
+    - name: Windows
+      versions:
+        - "2019"
+        - "2022"
+        - "2025"
+  galaxy_tags:
+    - windows
+    - configuration
+dependencies: []
+
+allow_duplicates: true
