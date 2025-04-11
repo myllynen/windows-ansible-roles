@@ -2,9 +2,12 @@
 - name: Verify DSC settings format
   assert:
     that:
-      - "'setting' in item"
-      - "'resource_name' in item"
-      - "'parameters' in item"
+      - item.keys() | sort == ['setting', 'resource_name', 'parameters'] | sort or
+        item.keys() | sort == ['setting', 'resource_name', 'parameters', 'reboot'] | sort
+      - item.setting is string
+      - item.resource_name is string
+      - item.parameters is mapping
+      - item.parameters | length > 0
     fail_msg: |
       Invalid or incomplete DSC setting:
 
@@ -12,7 +15,7 @@
     quiet: true
   loop: "{{ dsc_settings | select }}"
   loop_control:
-    label: "{{ item.setting }}"
+    label: "{{ item.setting | default(omit) }}"
 
 # Set inject_facts_as_vars = False to avoid warnings
 - name: Apply DSC settings

@@ -2,6 +2,7 @@
 - name: Verify registry settings format
   assert:
     that:
+      - item.keys() | difference(['setting', 'path', 'name', 'type', 'data', 'state', 'reboot']) | length == 0
       - "'setting' in item"
       - "'path' in item"
       - "':' in item.path"
@@ -19,7 +20,7 @@
     quiet: true
   loop: "{{ registry_settings | select }}"
   loop_control:
-    label: "{{ item.setting }}"
+    label: "{{ item.setting | default(omit) }}"
 
 - name: Apply registry settings
   ansible.windows.win_regedit:
