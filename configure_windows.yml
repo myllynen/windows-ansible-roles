@@ -9,24 +9,44 @@
     #
     # Ansible WinRM configuration
     #
-    ansible_connection: winrm
+    #ansible_connection: winrm
+    #ansible_pipelining: true
+    #ansible_winrm_port: 5985
+    #ansible_winrm_scheme: http
+    #ansible_winrm_transport: ntlm
+    #ansible_winrm_message_encryption: always
+    #ansible_winrm_server_cert_validation: ignore
+
+    #ansible_winrm_user: Administrator
+    #ansible_winrm_password: Foobar_12
+
+    #
+    # Ansible psrp configuration
+    #
+    ansible_connection: psrp
     ansible_pipelining: true
-    ansible_winrm_port: 5985
-    ansible_winrm_scheme: http
-    ansible_winrm_transport: ntlm
-    ansible_winrm_message_encryption: always
-    ansible_winrm_server_cert_validation: ignore
+    ansible_psrp_port: 5985
+    ansible_psrp_protocol: http
+    ansible_psrp_auth: ntlm
+    ansible_psrp_message_encryption: always
+    ansible_psrp_cert_validation: ignore
 
-    ansible_winrm_user: winrm
+    ansible_psrp_user: Administrator
     ansible_winrm_password: Foobar_12
-
-    ansible_become_method: runas
 
     #
     # Ansible Windows/SSH configuration
     #
+    #ansible_user: Administrator
+    #ansible_password: Foobar_12
     #ansible_shell_type: powershell
-    #ansible_become_method: runas
+    #ansible_ssh_common_args: -o GSSAPIDelegateCredentials=yes
+
+    #
+    # Common Windows connection parameters
+    #
+    ansible_become_method: runas
+    #ansible_become_user: Administrator
 
     #
     # accounts_local
@@ -79,6 +99,15 @@
     #    parameters:
     #      DestinationPath: C:\Temp
     #      Type: Directory
+    #      Ensure: Present
+    #
+    #  - setting: Allow full admin privileges for local admins over WinRM
+    #    resource_name: Registry
+    #    parameters:
+    #      Key: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    #      ValueName: LocalAccountTokenFilterPolicy
+    #      ValueType: DWord
+    #      ValueData: 1
     #      Ensure: Present
     #
     #  - setting: Enable User Account Control (UAC)
@@ -213,6 +242,12 @@
     #
     # Registry settings to apply with ansible.windows.win_regedit
     registry_settings:
+    #  - setting: Allow full admin privileges for local admins over WinRM
+    #    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+    #    name: LocalAccountTokenFilterPolicy
+    #    type: DWord
+    #    data: 1
+    #
     #  - setting: Enable User Account Control (UAC)
     #    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
     #    name: EnableLUA
@@ -318,8 +353,10 @@
     # These options will be explicitly set in sshd_config,
     # no other options will be left in place after update.
     # The example set below matches OpenSSH.Server 0.0.1.0
+    # and additionally also enables GSSAPI authentication.
     sshd_configuration_options:
     #  AuthorizedKeysFile: .ssh/authorized_keys
+    #  GSSAPIAuthentication yes
     #  Subsystem: sftp sftp-server.exe
     #  AllowGroups: administrators "openssh users"
     #  Match Group administrators:
