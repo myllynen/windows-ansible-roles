@@ -57,8 +57,10 @@ sshd_configuration_config_file:
 # These options will be explicitly set in sshd_config,
 # no other options will be left in place after update.
 # The example set below matches OpenSSH.Server 0.0.1.0
+# and additionally also enables GSSAPI authentication.
 sshd_configuration_options:
 #  AuthorizedKeysFile: .ssh/authorized_keys
+#  GSSAPIAuthentication yes
 #  Subsystem: sftp sftp-server.exe
 #  AllowGroups: administrators "openssh users"
 #  Match Group administrators:

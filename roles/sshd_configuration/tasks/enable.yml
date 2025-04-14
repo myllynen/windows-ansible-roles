@@ -1,13 +1,16 @@
 ---
 # ansible_user not available with become_user/loop
 - name: Set user for the next task
+  vars:
+    win_conn_user: "{{ 'ansible_' + ansible_connection + '_user' }}"
+    win_remote_user: "{{ vars[win_conn_user] | default(ansible_user) }}"
   set_fact:
-    win_remote_user: "{{ ansible_user }}"
+    win_become_user: "{{ ansible_become_user | default(win_remote_user) | default(lookup('env', 'USER')) }}"
   when: sshd_configuration_install | bool
 
 - name: Install OpenSSH.Server capability
   become: true
-  become_user: "{{ win_remote_user }}"
+  become_user: "{{ win_become_user }}"
   check_mode: false
   ansible.windows.win_powershell:
     error_action: stop
@@ -18,6 +21,11 @@
         $Ansible.Changed = $true
         if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
         Add-WindowsCapability -Name $missing.Name -Online
+        if ((Get-WindowsCapability -Name $missing.Name -Online | ? State -ne 'Installed')) {
+          $Ansible.Result = 'Failed to install OpenSSH.Server capability.'
+          $Ansible.Failed = $true
+          Exit 1
+        }
       }
   when: sshd_configuration_install | bool
 
