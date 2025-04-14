@@ -1,6 +1,12 @@
 ---
 # Registry settings to apply with ansible.windows.win_regedit
 registry_settings:
+#  - setting: Allow full admin privileges for local admins over WinRM
+#    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+#    name: LocalAccountTokenFilterPolicy
+#    type: DWord
+#    data: 1
+#
 #  - setting: Enable User Account Control (UAC)
 #    path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
 #    name: EnableLUA

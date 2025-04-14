@@ -11,6 +11,15 @@ dsc_settings:
 #      Type: Directory
 #      Ensure: Present
 #
+#  - setting: Allow full admin privileges for local admins over WinRM
+#    resource_name: Registry
+#    parameters:
+#      Key: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System
+#      ValueName: LocalAccountTokenFilterPolicy
+#      ValueType: DWord
+#      ValueData: 1
+#      Ensure: Present
+#
 #  - setting: Enable User Account Control (UAC)
 #    resource_name: Registry
 #    parameters:
