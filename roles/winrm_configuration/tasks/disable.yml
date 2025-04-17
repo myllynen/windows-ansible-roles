@@ -5,10 +5,17 @@
   when: ansible_connection == 'winrm' or
         ansible_connection == 'psrp'
 
+- name: Check WinRM service
+  ansible.windows.win_service_info:
+    name: WinRM
+  register: winrm_service
+
 - name: Disable WinRM service
   ansible.windows.win_service:
-    state: stopped
     name: WinRM
+    state: stopped
+    start_mode: disabled
+  when: winrm_service.exists
 
 - name: Block firewall WinRM HTTP port
   community.windows.win_firewall_rule:
