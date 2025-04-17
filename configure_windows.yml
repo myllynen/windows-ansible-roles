@@ -505,12 +505,13 @@
     # WinRM service start mode: auto or delayed
     winrm_configuration_start_mode: auto
 
-    # Enable Basic-over-HTTPS with self-signed cert
-    # if WinRM HTTPS listener is not yet configured
-    winrm_configuration_https_enable: false
-
-    # Optionally block WinRM HTTP port
+    # Optionally block WinRM HTTP port if using HTTPS
+    # NB. Kerberos and NTLM encrypt traffic with HTTP
     winrm_configuration_http_block: false
+
+    # Enable WinRM HTTPS listener, creates a self-signed
+    # cert if WinRM HTTPS listener is not yet configured
+    winrm_configuration_https_enable: false
 
     # WinRM service configuration
     # CBT is None, Relaxed, or Strict

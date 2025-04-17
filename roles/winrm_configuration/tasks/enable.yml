@@ -33,7 +33,7 @@
     state: started
     start_mode: "{{ winrm_configuration_start_mode }}"
 
-- name: Configure WinRM service HTTPS listener with self-signed cert
+- name: Enable WinRM service HTTPS listener
   check_mode: false
   ansible.windows.win_powershell:
     error_action: stop
@@ -41,19 +41,25 @@
       $Ansible.Changed = $false
       $friendlyName = 'WinRM over HTTPS'
       $cert = Get-ChildItem -Path Cert:\LocalMachine\My | ? FriendlyName -eq $friendlyName
-      $listener = Get-ChildItem -Path WSMan:\localhost\Listener -Recurse | ? Keys -contains 'Transport=HTTPS'
-      if (-not $cert -and -not $listener) {
+      $listener = Get-WSManInstance winrm/config/Listener -Enumerate | ? Transport -eq 'HTTPS'
+      if (-not $listener) {
         $Ansible.Changed = $true
         if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
-        $cert = New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My `
-                  -DnsName $env:COMPUTERNAME -NotAfter (get-date).AddYears(10) `
-                  -Provider 'Microsoft Enhanced RSA and AES Cryptographic Provider' `
-                  -KeyLength 4096
-        $cert.FriendlyName = $friendlyName
-        New-Item -Path WSMan:\localhost\Listener -Transport HTTPS `
-          -Address * -CertificateThumbPrint $cert.Thumbprint -Force
-        Set-Item -Path WSMan:\localhost\Service\AllowUnencrypted -Value $false
-        Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $true
+        if (-not $cert) {
+          $cert = New-SelfSignedCertificate -CertStoreLocation Cert:\LocalMachine\My `
+                    -DnsName $env:COMPUTERNAME -NotAfter (get-date).AddYears(10) `
+                    -Provider 'Microsoft Software Key Storage Provider'
+          $cert.FriendlyName = $friendlyName
+        }
+        New-WSManInstance -ResourceURI winrm/config/Listener `
+          -SelectorSet @{Address='*';Transport='HTTPS'} `
+          -ValueSet @{CertificateThumbprint=$cert.Thumbprint;Enabled=$true}
+      } elseif ($listener.Enabled -ne $true) {
+        $Ansible.Changed = $true
+        if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
+        Set-WSManInstance -ResourceURI winrm/config/Listener `
+          -SelectorSet @{Address='*';Transport='HTTPS'} `
+          -ValueSet @{Enabled=$true}
       }
   when: winrm_configuration_https_enable | bool
 
