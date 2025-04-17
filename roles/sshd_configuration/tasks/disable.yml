@@ -4,10 +4,17 @@
     msg: "Refusing to disable sshd when using SSH."
   when: ansible_connection == 'ssh'
 
+- name: Check sshd service
+  ansible.windows.win_service_info:
+    name: sshd
+  register: sshd_service
+
 - name: Disable sshd service
   ansible.windows.win_service:
-    state: stopped
     name: sshd
+    state: stopped
+    start_mode: disabled
+  when: sshd_service.exists
 
 - name: Block firewall SSH port
   community.windows.win_firewall_rule:
