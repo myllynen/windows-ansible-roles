@@ -15,8 +15,9 @@ system_update_reject_list: []
 system_update_skip_optional: true
 system_update_state: installed
 
-# Display update results
+# Display update results, full or compact
 system_update_display_results: true
+system_update_display_results_full: true
 
 # Reboot if needed after updates
 system_update_reboot: true

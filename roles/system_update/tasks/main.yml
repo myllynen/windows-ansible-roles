@@ -20,8 +20,13 @@
       updates: "{{ update_combined.updates }}"
 
 - name: Display update results
+  vars:
+    full_results: "{{ system_update_updates }}"
+    compact_results: "{{ [] if 'updates' not in system_update_updates else
+                         system_update_updates.updates.values() | map(attribute='title') }}"
+    update_results: "{{ full_results if system_update_display_results_full | bool else compact_results }}"
   debug:
-    var: system_update_updates
+    var: update_results
   when: system_update_display_results | bool
 
 - name: Fail if updating did not succeed
