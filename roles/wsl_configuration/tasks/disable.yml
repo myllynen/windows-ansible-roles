@@ -1,0 +1,44 @@
+---
+- name: Uninstall WSL (Windows Subsystem for Linux)
+  environment:
+    WSL_UTF8: 1
+  check_mode: false
+  ansible.windows.win_powershell:
+    error_action: silently_continue
+    script: |
+      $Ansible.Changed = $false
+      $status = (wsl.exe --status) -replace '\x00', '' | ? { $_ -ne '' } | Out-String
+      if ($status -and $status -notmatch 'not found|not installed') {
+        $Ansible.Changed = $true
+        if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
+        (wsl.exe --shutdown) -replace '\x00', '' | ? { $_ -ne '' } | Out-String
+        foreach ($distro in @((wsl.exe --list --all --quiet) -replace '\x00', '' | ? { $_ -ne '' })) {
+          (wsl.exe --unregister "$distro") -replace '\x00', '' | ? { $_ -ne '' } | Out-String
+        }
+        $result = (wsl.exe --uninstall) -replace '\x00', '' | ? { $_ -ne '' } | Out-String
+        if ($LASTEXITCODE -ne 0) {
+          $Ansible.Result = "Failed to uninstall WSL: $result"
+          $Ansible.Failed = $true
+          Exit 1
+        }
+      }
+      $feature = Get-WindowsOptionalFeature -FeatureName Microsoft-Windows-Subsystem-Linux -Online | ? State -eq 'Enabled'
+      if ($feature) {
+        $Ansible.Changed = $true
+        if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
+        $disable = Disable-WindowsOptionalFeature -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart -Online
+        if (-not $disable) {
+          $Ansible.Result = "Failed to disable WSL feature: $disable"
+          $Ansible.Failed = $true
+          Exit 1
+        }
+      }
+  register: wsl_uninstall
+
+- name: Reboot system
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after WSL changes"
+  when:
+    - wsl_configuration_reboot | bool
+    - wsl_uninstall is changed

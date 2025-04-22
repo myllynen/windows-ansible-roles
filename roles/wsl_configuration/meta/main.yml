@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  role_name: wsl_configuration
+  author: Marko Myllynen <myllynen@redhat.com>
+  company: Red Hat, Inc.
+  description: wsl_configuration role
+  license: GPLv3+
+  min_ansible_version: "2.18"
+  platforms:
+    - name: Windows
+      versions:
+        - "2022"
+        - "2025"
+  galaxy_tags:
+    - windows
+    - configuration
+dependencies: []

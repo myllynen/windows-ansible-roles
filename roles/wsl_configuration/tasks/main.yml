@@ -1,0 +1,12 @@
+---
+- name: Disable WSL
+  include_tasks: disable.yml
+  when:
+    - wsl_configuration_enable is not none
+    - not wsl_configuration_enable | bool
+
+- name: Enable WSL
+  include_tasks: enable.yml
+  when:
+    - wsl_configuration_enable is not none
+    - wsl_configuration_enable | bool
