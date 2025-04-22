@@ -56,8 +56,8 @@
       -PassThru `
       -Wait
       if ($p.ExitCode) {
-        $Ansible.Failed = $true
         $Ansible.Result = Get-Content -Raw .\.tmp
+        $Ansible.Failed = $true
         del .\.tmp
       }
   changed_when: false

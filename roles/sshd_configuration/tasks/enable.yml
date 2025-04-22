@@ -20,9 +20,9 @@
       if ($missing) {
         $Ansible.Changed = $true
         if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
-        Add-WindowsCapability -Name $missing.Name -Online
+        $result = Add-WindowsCapability -Name $missing.Name -Online
         if ((Get-WindowsCapability -Name $missing.Name -Online | ? State -ne 'Installed')) {
-          $Ansible.Result = 'Failed to install OpenSSH.Server capability.'
+          $Ansible.Result = "Failed to install OpenSSH.Server capability: $result"
           $Ansible.Failed = $true
           Exit 1
         }
