@@ -11,7 +11,7 @@
       if ($LASTEXITCODE -ne 0) {
         $Ansible.Changed = $true
         if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
-        $opts = if ($status -match 'not found') { '--update' } else { '--install' }
+        $opts = if ($status -match 'not found') { '--update' } else { '--install', '--no-distribution' }
         # Start-Process here is required at least with Windows Server 2025
         #$result = (wsl.exe $opts) -replace '\x00', '' | ? { $_ -ne '' } | Out-String
         $result = Start-Process -FilePath wsl.exe -ArgumentList "$opts" -PassThru -Verb RunAs -Wait
