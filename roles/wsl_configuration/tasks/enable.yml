@@ -1,7 +1,7 @@
 ---
 - name: Install WSL (Windows Subsystem for Linux)
   environment:
-    WSL_UTF8: 1
+    WSL_UTF8: "1"
   check_mode: false
   ansible.windows.win_powershell:
     error_action: silently_continue
@@ -25,7 +25,7 @@
 
 - name: Update WSL (Windows Subsystem for Linux)
   environment:
-    WSL_UTF8: 1
+    WSL_UTF8: "1"
   check_mode: false
   ansible.windows.win_powershell:
     error_action: silently_continue
@@ -45,6 +45,13 @@
     - wsl_configuration_update | bool
     - wsl_install is not changed
 
+- name: Create WSL configuration file
+  ansible.windows.win_template:
+    src: "{{ wsl_configuration_config_file }}"
+    dest: '%USERPROFILE%\.wslconfig'
+    newline_sequence: '\r\n'
+  when: wsl_configuration_config_file is truthy
+
 - name: Reboot system
   ansible.windows.win_reboot:
     reboot_timeout: 600
@@ -55,7 +62,7 @@
 
 - name: Check installed WSL distributions
   environment:
-    WSL_UTF8: 1
+    WSL_UTF8: "1"
   check_mode: false
   ansible.windows.win_powershell:
     error_action: stop
@@ -67,12 +74,12 @@
   delay: 3
   until: wsl_distros is not failed
   when:
-    - wsl_configuration_distributions or
+    - wsl_configuration_distributions is truthy or
       wsl_configuration_distributions_exclusive | bool
 
 - name: Uninstall WSL distributions
   environment:
-    WSL_UTF8: 1
+    WSL_UTF8: "1"
   check_mode: false
   ansible.windows.win_powershell:
     error_action: silently_continue
@@ -97,7 +104,7 @@
 
 - name: Install WSL distributions
   environment:
-    WSL_UTF8: 1
+    WSL_UTF8: "1"
   check_mode: false
   ansible.windows.win_powershell:
     error_action: silently_continue
@@ -119,7 +126,7 @@
 
 - name: Configure WSL default distribution
   environment:
-    WSL_UTF8: 1
+    WSL_UTF8: "1"
   check_mode: false
   ansible.windows.win_powershell:
     error_action: silently_continue
@@ -138,13 +145,13 @@
         }
       }
   when:
-    - wsl_configuration_distribution_default
+    - wsl_configuration_distribution_default is truthy
     - wsl_install is not changed or
       wsl_configuration_reboot | bool
 
 - name: Update installed WSL distributions
   environment:
-    WSL_UTF8: 1
+    WSL_UTF8: "1"
   check_mode: false
   ansible.windows.win_powershell:
     error_action: silently_continue

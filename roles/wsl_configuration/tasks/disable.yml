@@ -1,7 +1,7 @@
 ---
 - name: Uninstall WSL (Windows Subsystem for Linux)
   environment:
-    WSL_UTF8: 1
+    WSL_UTF8: "1"
   check_mode: false
   ansible.windows.win_powershell:
     error_action: silently_continue
@@ -34,6 +34,12 @@
         }
       }
   register: wsl_uninstall
+
+- name: Remove WSL configuration file
+  ansible.windows.win_file:
+    path: '%USERPROFILE%\.wslconfig'
+    state: absent
+  when: wsl_configuration_config_file is truthy
 
 - name: Reboot system
   ansible.windows.win_reboot:
