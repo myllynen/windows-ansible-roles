@@ -1,7 +1,7 @@
 ---
 namespace: myllynen
 name: windows_ansible_roles
-version: "4.5.1"
+version: "4.6.0"
 readme: README.md
 authors:
   - Marko Myllynen <myllynen@redhat.com>
