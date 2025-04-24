@@ -1,6 +1,6 @@
 ---
 - name: Fail if trying to disable WinRM using WinRM
-  fail:
+  ansible.builtin.fail:
     msg: "Refusing to disable WinRM when using WinRM."
   when: ansible_connection == 'winrm' or
         ansible_connection == 'psrp'

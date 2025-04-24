@@ -1,6 +1,6 @@
 ---
 - name: Verify registry settings format
-  assert:
+  ansible.builtin.assert:
     that:
       - item.keys() | difference(['setting', 'path', 'name', 'type', 'data', 'state', 'reboot']) | length == 0
       - "'setting' in item"

@@ -1,6 +1,6 @@
 ---
 - name: Fail if Administrator trying to disable self
-  fail:
+  ansible.builtin.fail:
     msg: "Refusing to disable Administrator own account."
   when:
     - not accounts_local_administrator_enable | bool

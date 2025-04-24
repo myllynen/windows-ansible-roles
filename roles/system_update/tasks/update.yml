@@ -19,7 +19,7 @@
      system_update_retry_after_install | bool)
 
 - name: Record update installation result
-  set_fact:
+  ansible.builtin.set_fact:
     update_install: "{{ update_result }}"
     update_combined: "{{ update_combined | default({'updates': {}}) |
                          combine({'updates': update_result.updates}, recursive=true) }}"
@@ -38,12 +38,12 @@
        update_attempt < system_update_retry_count | int)
 
 - name: Record reboot status
-  set_fact:
+  ansible.builtin.set_fact:
     system_update_rebooted: true
   when: reboot_status is not skipped
 
 - name: Pause before next update attempt
-  pause:
+  ansible.builtin.pause:
     seconds: "{{ system_update_retry_delay }}"
   when:
     - update_install is failed or

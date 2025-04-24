@@ -1,6 +1,6 @@
 ---
 - name: Verify DSC settings format
-  assert:
+  ansible.builtin.assert:
     that:
       - item.keys() | sort == ['setting', 'resource_name', 'parameters'] | sort or
         item.keys() | sort == ['setting', 'resource_name', 'parameters', 'reboot'] | sort

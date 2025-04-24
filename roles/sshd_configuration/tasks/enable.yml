@@ -4,7 +4,7 @@
   vars:
     win_conn_user: "{{ 'ansible_' + ansible_connection + '_user' }}"
     win_remote_user: "{{ vars[win_conn_user] | default(ansible_user) }}"
-  set_fact:
+  ansible.builtin.set_fact:
     win_become_user: "{{ ansible_become_user | default(win_remote_user) | default(lookup('env', 'USER')) }}"
   when: sshd_configuration_install | bool
 
@@ -80,7 +80,7 @@
        'present' in sshd_configuration_admins_keys"
 
 - name: Validate pending sshd configuration
-  include_tasks: validate.yml
+  ansible.builtin.include_tasks: validate.yml
   when:
     - sshd_configuration_config_validate | bool
     - sshd_configuration_config_file is string or

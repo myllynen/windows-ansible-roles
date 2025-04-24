@@ -5,5 +5,5 @@
   register: system_init
 
 - name: Initialize fresh system
-  include_tasks: init.yml
+  ansible.builtin.include_tasks: init.yml
   when: not system_init.stat.exists

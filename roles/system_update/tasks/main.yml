@@ -1,13 +1,13 @@
 ---
 - name: Include tasks to install updates
-  include_tasks:
+  ansible.builtin.include_tasks:
     file: update.yml
   loop: "{{ range(1, system_update_retry_count | int + 1) }}"
   loop_control:
     loop_var: update_attempt
 
 - name: Record final update results
-  set_fact:
+  ansible.builtin.set_fact:
     system_update_updates:
       changed: "{{ true if update_combined.updates | length > 0 else false }}"
       failed: "{{ update_install.failed }}"
@@ -25,12 +25,12 @@
     compact_results: "{{ [] if 'updates' not in system_update_updates else
                          system_update_updates.updates.values() | map(attribute='title') }}"
     update_results: "{{ full_results if system_update_display_results_full | bool else compact_results }}"
-  debug:
+  ansible.builtin.debug:
     var: update_results
   when: system_update_display_results | bool
 
 - name: Fail if updating did not succeed
-  fail:
+  ansible.builtin.fail:
     msg: "Failed to install updates."
   when: update_install is failed
 
@@ -40,7 +40,7 @@
     filtered: "{{ system_update_updates.updates | dict2items | selectattr('value.title', 'regex', filter) | length }}"
     dotnet_optimize_powershell: true
     dotnet_optimize_all_assemblies: true
-  include_role:
+  ansible.builtin.include_role:
     name: dotnet_optimize
   when:
     - system_update_compile_assemblies | bool

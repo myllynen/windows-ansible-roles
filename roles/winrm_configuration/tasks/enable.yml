@@ -70,7 +70,7 @@
     script: |
       $Ansible.Changed = $false
       $key = '{{ item.key }}'
-      $value = '{{ item.value | to_json if item.value is mapping else item.value }}'
+      $value = '{{ item.value | to_json if item.value | default(false) is mapping else item.value }}'
       if ($value.StartsWith('{')) {
         $hash = @{}
         $value = $value | ConvertFrom-Json
@@ -131,5 +131,5 @@
   when: winrm_configuration_https_enable | bool
 
 - name: Display WinRM configuration
-  include_tasks: display.yml
+  ansible.builtin.include_tasks: display.yml
   when: winrm_configuration_display_config | bool

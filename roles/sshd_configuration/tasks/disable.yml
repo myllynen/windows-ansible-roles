@@ -1,6 +1,6 @@
 ---
 - name: Fail if trying to disable sshd using SSH
-  fail:
+  ansible.builtin.fail:
     msg: "Refusing to disable sshd when using SSH."
   when: ansible_connection == 'ssh'
 
