@@ -1,0 +1,76 @@
+---
+- name: Verify path environment settings format
+  ansible.builtin.assert:
+    that:
+      - item.keys() | sort == ['elements', 'name', 'scope', 'state'] | sort or
+        item.keys() | sort == ['elements', 'name', 'reboot', 'scope', 'state'] | sort
+      - item.name is defined and item.name is string
+      - item.scope is defined and item.scope is string and item.scope is in ['machine', 'user']
+      - item.state is defined and item.state is string and item.state is in ['absent', 'present']
+      - item.elements is defined and (item.elements is string or (item.elements is iterable and item.elements is not mapping))
+      - item.elements | length > 0
+    fail_msg: |
+      Invalid or incomplete path environment setting:
+
+      {{ item | to_nice_yaml }}
+    quiet: true
+  loop: "{{ environment_settings_paths | select }}"
+  loop_control:
+    label: "{{ item.name | default(omit) }}"
+
+- name: Verify environment variable settings format
+  ansible.builtin.assert:
+    that:
+      - item.keys() | sort == ['level', 'variables'] | sort or
+        item.keys() | sort == ['level', 'reboot', 'variables'] | sort
+      - item.level is defined and item.level is string and item.level is in ['machine', 'user']
+      - item.variables is defined and item.variables is mapping
+      - item.variables | length > 0
+    fail_msg: |
+      Invalid or incomplete environment variable setting:
+
+      {{ item | to_nice_yaml }}
+    quiet: true
+  loop: "{{ environment_settings_variables | select }}"
+  loop_control:
+    label: "{{ item.variables.keys() | default(omit) }}"
+
+- name: Configure path environment settings
+  ansible.windows.win_path:
+    scope: "{{ item.scope }}"
+    name: "{{ item.name }}"
+    elements: "{{ item.elements }}"
+    state: "{{ item.state }}"
+  register: path_config
+  loop: "{{ environment_settings_paths | select }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configure environment variables settings
+  ansible.windows.win_environment:
+    level: "{{ item.level }}"
+    variables: "{{ item.variables }}"
+  register: variable_config
+  loop: "{{ environment_settings_variables | select }}"
+  loop_control:
+    label: "{{ item.variables.keys() }}"
+
+- name: Reboot system
+  vars:
+    path_reboot_needed: "{{ path_config.results
+                            | selectattr('item.reboot', 'defined')
+                            | selectattr('item.reboot', 'equalto', true)
+                            | selectattr('changed', 'equalto', true) | length > 0 }}"
+    variable_reboot_needed: "{{ variable_config.results
+                                | selectattr('item.reboot', 'defined')
+                                | selectattr('item.reboot', 'equalto', true)
+                                | selectattr('changed', 'equalto', true) | length > 0 }}"
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after environment changes"
+  when:
+    - environment_settings_reboot | bool
+    - path_config is changed or
+      variable_config is changed
+    - path_reboot_needed or
+      variable_reboot_needed
