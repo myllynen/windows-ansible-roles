@@ -10,13 +10,15 @@ Below are the role default values from defaults/main.yml:
 
 <pre>
 ---
-# Target network adapters
-dns_client_adapter_names: '*'
-
-# List of DNS servers
-dns_client_dns_servers:
-#  - 1.1.1.1
-#  - 8.8.8.8
+# List of DNS client configurations
+dns_client_configurations:
+#  - adapter_names: '*'
+#    dns_servers:
+#      - 1.1.1.1
+#      - 8.8.8.8
+#    suffix_search_list:
+#      - contoso.com
+#      - example.com
 </pre>
 
 ## License
