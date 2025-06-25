@@ -1,0 +1,83 @@
+---
+- name: Check connecting user
+  vars:
+    win_conn_user: "{{ 'ansible_' + ansible_connection + '_user' }}"
+    win_remote_user: "{{ vars[win_conn_user] | default(ansible_user) }}"
+  ansible.builtin.set_fact:
+    win_ansible_user: "{{ win_remote_user | default(lookup('env', 'USER')) }}"
+
+- name: Get list of user profiles
+  check_mode: false
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      $userProfiles = @()
+      $excludeSIDs = '^S-1-5-(18|19|20)$|^S-1-5-21-\d+-\d+-\d+-(501|503|504)$'
+      $localProfiles = Get-CimInstance -ClassName Win32_UserProfile | Where-Object {
+        -not $_.Special -and $_.SID -notmatch $excludeSIDs
+      } | ForEach-Object {
+        $profileObject = $_
+        try {
+          $userName = ([System.Security.Principal.SecurityIdentifier]$profileObject.SID).Translate([System.Security.Principal.NTAccount]).Value
+        }
+        catch {
+          $userName = $profileObject.SID
+        }
+        if ($userName -notmatch '\\{{ win_ansible_user }}$') {
+          [PSCustomObject]@{
+            UserName  = $userName
+            LocalPath = $profileObject.LocalPath
+          }
+        }
+      } | Where-Object { $_ -ne $null }
+      $userProfiles += $localProfiles
+      $defaultProfile = [PSCustomObject]@{
+        UserName  = 'Default Profile'
+        LocalPath = 'C:\Users\Default'
+      }
+      $userProfiles += $defaultProfile
+      $Ansible.Result = $userProfiles
+  register: user_profiles
+  changed_when: false
+  when:
+    - user_settings_registry is not none
+    - user_settings_registry | length > 0
+
+- name: Configure user registry settings
+  ansible.windows.win_regedit:
+    hive: "{{ item[0].LocalPath }}\\NTUSER.DAT"
+    path: "{{ item[1].path }}"
+    name: "{{ item[1].name | default(omit) }}"
+    type: "{{ item[1].type | default(omit) }}"
+    data: "{{ item[1].data | default(omit) }}"
+    state: "{{ item[1].state | default(omit) }}"
+  register: user_update
+  failed_when:
+    - user_update.msg is defined
+    - user_settings_apply_to_logged_in_users | bool or
+      'used by another process' not in user_update.msg
+  ignore_errors: "{{ user_settings_apply_to_logged_in_users | bool }}"
+  loop: "{{ user_profiles.result | product(user_settings_registry | default([], true)) }}"
+  loop_control:
+    label: "{{ item[0].UserName }} - {{ item[1].setting }}"
+  when:
+    - user_settings_registry is not none
+    - user_settings_registry | length > 0
+
+- name: Apply settings to logged in users
+  vars:
+    failed_users: "{{ user_update.results | selectattr('failed', 'equalto', true) | map(attribute='item.0') | unique }}"
+  become: true
+  become_user: "{{ item[0].UserName }}"
+  ansible.windows.win_regedit:
+    path: "{{ item[1].path }}"
+    name: "{{ item[1].name | default(omit) }}"
+    type: "{{ item[1].type | default(omit) }}"
+    data: "{{ item[1].data | default(omit) }}"
+    state: "{{ item[1].state | default(omit) }}"
+  loop: "{{ failed_users | product(user_settings_registry | default([], true)) }}"
+  loop_control:
+    label: "{{ item[0].UserName }} - {{ item[1].setting }}"
+  when:
+    - user_settings_registry is not none
+    - user_settings_registry | length > 0
