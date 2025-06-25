@@ -1,10 +1,17 @@
 ---
+- name: Check connecting user
+  vars:
+    win_conn_user: "{{ 'ansible_' + ansible_connection + '_user' }}"
+    win_remote_user: "{{ vars[win_conn_user] | default(ansible_user) }}"
+  ansible.builtin.set_fact:
+    win_ansible_user: "{{ win_remote_user | default(lookup('env', 'USER')) }}"
+
 - name: Fail if Administrator trying to disable self
   ansible.builtin.fail:
     msg: "Refusing to disable Administrator own account."
   when:
     - not accounts_local_administrator_enable | bool
-    - ansible_user | lower == 'administrator'
+    - win_ansible_user | lower == 'administrator'
 
 - name: Disable built-in Administrator account
   ansible.windows.win_user:
@@ -20,14 +27,111 @@
 
 - name: Configure password expiration for Ansible user
   ansible.windows.win_user:
-    name: "{{ ansible_user }}"
+    name: "{{ win_ansible_user }}"
     password_never_expires: "{{ not accounts_local_ansible_user_password_expires | bool }}"
-  when: ansible_user | lower != 'administrator'
+  when: win_ansible_user | lower != 'administrator'
 
 - name: Configure showing Ansible user on Welcome Screen
   ansible.windows.win_regedit:
     path: HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList
-    name: "{{ ansible_user }}"
+    name: "{{ win_ansible_user }}"
     type: DWord
     data: "{{ 1 if accounts_local_ansible_user_show_on_welcome | bool else 0 }}"
-  when: ansible_user | lower != 'administrator'
+  when: win_ansible_user | lower != 'administrator'
+
+- name: Delete local profile
+  vars:
+    name_param: "{{ item if not item.startswith('S-') else omit }}"
+    username_param: "{{ item if item.startswith('S-') else omit }}"
+  ansible.windows.win_user_profile:
+    name: "{{ name_param }}"
+    username: "{{ username_param }}"
+    state: absent
+    remove_multiple: true
+  loop: "{{ accounts_local_profiles_delete | select }}"
+
+- name: Delete local user
+  ansible.windows.win_user:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ accounts_local_users_delete | select }}"
+
+- name: Delete local group
+  ansible.windows.win_group:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ accounts_local_groups_delete | select }}"
+
+- name: Create local group
+  ansible.windows.win_group:
+    name: "{{ item.name }}"
+    state: present
+    description: "{{ item.description | default(omit) }}"
+    members: "{{ item.members | default(omit) }}"
+  loop: "{{ accounts_local_groups_create | select }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create passwordless list of local users to create
+  no_log: "{{ accounts_local_no_log }}"
+  ansible.builtin.set_fact:
+    create_users: "{{ create_users | default([]) + [item | dict2items | rejectattr('key', 'equalto', 'password') | items2dict] }}"
+  loop: "{{ accounts_local_users_create | select }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create local user
+  ansible.windows.win_user:
+    name: "{{ item.name }}"
+    state: present
+    fullname: "{{ item.fullname | default(omit) }}"
+    description: "{{ item.description | default(omit) }}"
+    password_expired: "{{ item.password_expired | default(omit) }}"
+    password_never_expires: "{{ item.password_never_expires | default(omit) }}"
+    user_cannot_change_password: "{{ item.user_cannot_change_password | default(omit) }}"
+    groups_action: "{{ item.groups_action | default(omit) }}"
+    groups: "{{ item.groups | default(omit) }}"
+    account_disabled: "{{ item.account_disabled | default(omit) }}"
+    account_expires: "{{ item.account_expires | default(omit) }}"
+    account_locked: "{{ item.account_locked | default(omit) }}"
+    login_script: "{{ item.login_script | default(omit) }}"
+    home_directory: "{{ item.home_directory | default(omit) }}"
+  loop: "{{ create_users | default([]) | select }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Update local user password
+  no_log: "{{ accounts_local_no_log }}"
+  ansible.windows.win_user:
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+  loop: "{{ accounts_local_users_create | select | selectattr('password', 'defined') }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configure local group membership
+  ansible.windows.win_group_membership:
+    name: "{{ item.name }}"
+    members: "{{ item.members }}"
+    state: "{{ item.state }}"
+  loop: "{{ accounts_local_group_members | select }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configure local rights
+  ansible.windows.win_user_right:
+    name: "{{ item.name }}"
+    users: "{{ item.users }}"
+    action: "{{ item.action }}"
+  loop: "{{ accounts_local_users_rights | select }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create local profile
+  ansible.windows.win_user_profile:
+    name: "{{ item.name | default(omit) }}"
+    username: "{{ item.username }}"
+    state: present
+  loop: "{{ accounts_local_profiles_create | select }}"
+  loop_control:
+    label: "{{ item.username }}"
