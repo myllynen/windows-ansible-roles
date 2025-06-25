@@ -3,16 +3,16 @@
   ansible.builtin.assert:
     that:
       - item.keys() | difference(['setting', 'path', 'name', 'type', 'data', 'state', 'reboot']) | length == 0
-      - "'setting' in item"
-      - "'path' in item"
+      - item.setting is defined and item.setting is string
+      - item.path is defined and item.path is string
       - "':' in item.path"
       - item.state | default('present') in ['absent', 'present']
-      - (item.state | default('present') == 'absent' if 'name' not in item or
-                                                        'type' not in item or
-                                                        'data' not in item else true)
+      - (item.state | default('present') == 'absent' if item.name is not defined or
+                                                        item.type is not defined or
+                                                        item.data is not defined else true)
       - (item.type | default('string') | lower in ['none', 'binary', 'dword',
                                                    'expandstring', 'multistring',
-                                                   'string', 'qword'] if 'type' in item else true)
+                                                   'string', 'qword'] if item.type is defined else true)
     fail_msg: |
       Invalid or incomplete registry setting:
 

@@ -4,9 +4,9 @@
     that:
       - item.keys() | sort == ['setting', 'resource_name', 'parameters'] | sort or
         item.keys() | sort == ['setting', 'resource_name', 'parameters', 'reboot'] | sort
-      - item.setting is string
-      - item.resource_name is string
-      - item.parameters is mapping
+      - item.setting is defined and item.setting is string
+      - item.resource_name is defined and item.resource_name is string
+      - item.parameters is defined and item.parameters is mapping
       - item.parameters | length > 0
     fail_msg: |
       Invalid or incomplete DSC setting:

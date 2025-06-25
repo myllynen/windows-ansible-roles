@@ -70,7 +70,7 @@
     script: |
       $Ansible.Changed = $false
       $key = '{{ item.key }}'
-      $value = '{{ item.value | to_json if item.value | default(false) is mapping else item.value }}'
+      $value = '{{ item.value | to_json if item.value is mapping else item.value }}'
       if ($value.StartsWith('{')) {
         $hash = @{}
         $value = $value | ConvertFrom-Json

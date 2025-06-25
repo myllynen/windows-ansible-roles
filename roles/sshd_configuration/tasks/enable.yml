@@ -1,6 +1,5 @@
 ---
-# ansible_user not available with become_user/loop
-- name: Set user for the next task
+- name: Check connecting user
   vars:
     win_conn_user: "{{ 'ansible_' + ansible_connection + '_user' }}"
     win_remote_user: "{{ vars[win_conn_user] | default(ansible_user) }}"

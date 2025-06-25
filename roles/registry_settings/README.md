@@ -10,6 +10,8 @@ Below are the role default values from defaults/main.yml:
 
 <pre>
 ---
+# For user-specific settings see user_settings
+
 # Registry settings to apply with ansible.windows.win_regedit
 registry_settings:
 #  - setting: Allow full admin privileges for local admins over WinRM
