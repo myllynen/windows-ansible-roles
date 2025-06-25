@@ -1,7 +1,7 @@
 ---
 namespace: myllynen
 name: windows_ansible_roles
-version: "4.6.0"
+version: "5.0.0"
 readme: README.md
 authors:
   - Marko Myllynen <myllynen@redhat.com>
@@ -14,7 +14,7 @@ tags:
   - configuration
   - infrastructure
 dependencies:
-  ansible.windows: ">=2.7.0"
-  community.windows: ">=2.4.0"
+  ansible.windows: ">=3.0.0"
+  community.windows: ">=3.0.0"
 repository: https://www.github.com/myllynen/windows-ansible-roles
 issues: https://www.github.com/myllynen/windows-ansible-roles/issues
