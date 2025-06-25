@@ -24,6 +24,16 @@
     state: "{{ netbios_state }}"
   register: netbios_config
 
+- name: Configure static network route
+  ansible.windows.win_route:
+    destination: "{{ item.destination }}"
+    gateway: "{{ item.gateway | default(omit) }}"
+    metric: "{{ item.metric | default(omit) }}"
+    state: "{{ item.state }}"
+  loop: "{{ network_configuration_routes | select }}"
+  loop_control:
+    label: "{{ item.destination }}"
+
 - name: Flush DNS resolver cache
   ansible.windows.win_command: ipconfig.exe /flushdns
   when:

@@ -19,8 +19,19 @@ network_configuration_lmhosts_enable: true
 # Enable or disable NetBIOS
 network_configuration_netbios_enable: true
 
-# Reboot after network changes
+# Reboot after IPv6/NetBIOS changes
 network_configuration_reboot: true
+
+# Static route configuration
+# Each setting requires: destination, state
+# When state is present also required: gateway, metric
+network_configuration_routes:
+#  - destination: 192.168.123.123/32
+#    gateway: 192.168.1.1
+#    metric: 1
+#    state: present
+#  - destination: 192.168.123.231/32
+#    state: absent
 </pre>
 
 ## License
