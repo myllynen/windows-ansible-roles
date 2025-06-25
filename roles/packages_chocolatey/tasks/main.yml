@@ -1,0 +1,78 @@
+---
+- name: Check if Chocolatey is present
+  ansible.windows.win_command: choco.exe -v
+  register: choco_present
+  failed_when: false
+  changed_when: false
+  when: not packages_chocolatey_update | bool
+
+- name: Install latest Chocolatey
+  chocolatey.chocolatey.win_chocolatey:
+    name: chocolatey
+    state: latest
+    package_params: "{{ packages_chocolatey_package_params | default(omit, true) }}"
+    bootstrap_script: "{{ packages_chocolatey_bootstrap_script | default(omit, true) }}"
+    validate_certs: "{{ packages_chocolatey_validate_certs | default(omit, true) }}"
+  when: (choco_present is not skipped and choco_present.rc != 0) or
+        packages_chocolatey_update | bool
+
+- name: Restart in-use sshd service to apply PATH changes
+  ansible.windows.win_service:
+    name: sshd
+    state: restarted
+  when:
+    - ansible_connection == 'ssh'
+    - choco_present.rc != 0
+
+- name: Configure Chocolatey - source
+  chocolatey.chocolatey.win_chocolatey_source:
+    name: "{{ item.name }}"
+    state: "{{ item.state | default(omit) }}"
+    source: "{{ item.source | default(omit) }}"
+    source_username: "{{ item.source_username | default(omit) }}"
+    source_password: "{{ item.source_password | default(omit) }}"
+    update_password: "{{ item.update_password | default(omit) }}"
+    certificate: "{{ item.certificate | default(omit) }}"
+    certificate_password: "{{ item.certificate_password | default(omit) }}"
+    admin_only: "{{ item.admin_only | default(omit) }}"
+    allow_self_service: "{{ item.allow_self_service | default(omit) }}"
+    bypass_proxy: "{{ item.bypass_proxy | default(omit) }}"
+    priority: "{{ item.priority | default(omit) }}"
+  loop: "{{ packages_chocolatey_source | select }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configure Chocolatey - config
+  chocolatey.chocolatey.win_chocolatey_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+  loop: "{{ packages_chocolatey_settings | selectattr('value', 'defined') | selectattr('state', 'in', ['absent', 'present']) }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configure Chocolatey - features
+  chocolatey.chocolatey.win_chocolatey_feature:
+    name: "{{ item.name }}"
+    state: "{{ item.state }}"
+  loop: "{{ packages_chocolatey_settings | selectattr('value', 'undefined') | selectattr('state', 'in', ['disabled', 'enabled']) }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Remove unwanted Chocolatey packages
+  chocolatey.chocolatey.win_chocolatey:
+    name: "{{ packages_chocolatey_remove | select }}"
+    state: absent
+    remove_dependencies: "{{ packages_chocolatey_remove_deps }}"
+
+- name: Install wanted Chocolatey packages
+  chocolatey.chocolatey.win_chocolatey:
+    name: "{{ packages_chocolatey_install | select }}"
+    state: present
+    allow_prerelease: "{{ packages_chocolatey_install_allow_prerelease }}"
+    ignore_dependencies: "{{ packages_chocolatey_install_ignore_dependencies }}"
+
+- name: Update Chocolatey packages
+  chocolatey.chocolatey.win_chocolatey:
+    name: all
+    state: latest
+  when: packages_chocolater_update_packages | bool
