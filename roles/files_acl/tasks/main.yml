@@ -1,0 +1,24 @@
+---
+- name: Configure ACLs
+  ansible.windows.win_acl:
+    path: "{{ item.path }}"
+    user: "{{ item.user }}"
+    type: "{{ item.type }}"
+    rights: "{{ item.rights }}"
+    state: "{{ item.state | default(omit) }}"
+    follow: "{{ item.follow | default(omit) }}"
+    inherit: "{{ item.inherit | default(omit) }}"
+    propagation: "{{ item.propagation | default(omit) }}"
+  register: acl_files
+  loop: "{{ files_acl | default([], true) }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Update path owner
+  ansible.windows.win_owner:
+    path: "{{ item.path }}"
+    user: "{{ item.owner }}"
+    recurse: "{{ item.recurse | default(omit) }}"
+  loop: "{{ files_acl | default([], true) | selectattr('owner', 'defined') }}"
+  loop_control:
+    label: "{{ item.path }}"

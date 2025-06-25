@@ -1,0 +1,9 @@
+---
+# List of files and directories to fetch
+# Uses Ansible built-in fetch module
+# Registers variable: fetch_files
+files_fetch:
+#  - src: C:\Temp\log.txt
+#    dest: /tmp/log-{{ inventory_hostname }}.txt
+#    flat: true
+#    validate_checksum: false

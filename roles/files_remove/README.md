@@ -1,0 +1,42 @@
+# files_remove role
+
+[![License: GPLv3](https://img.shields.io/badge/license-GPLv3-brightgreen.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+Please see the collection main page for a higher level description.
+
+## Configuration
+
+Below are the role default values from defaults/main.yml:
+
+<pre>
+---
+# NB. Be *very* careful with this role as
+# any typos or unexpected wildcard expansion
+# might cause unintended files and directories
+# to be removed across all the managed systems
+# with no questions asked! You have been warned.
+
+# List of files and directories to remove
+# Wildcards are supported for the last element,
+# directories will be removed recursively
+# Registers variable: remove_files
+files_remove:
+#  - C:\Tools\conf\*.conf
+#  - C:\Temp\log.txt
+#  - C:\Temp\testdir
+#  - C:\Temp\*.old
+
+# Use recursive find for above patterns,
+# be extremely careful with this option,
+# C:\Temp\*.old will also remove C:\Temp\save\y.old!
+files_remove_recursive: false
+
+# List of items to exclude from removal
+# Useful with wildcards, optional to use
+files_remove_exclude:
+#  - C:\Tools\conf\base.conf
+</pre>
+
+## License
+
+GPLv3+

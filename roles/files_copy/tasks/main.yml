@@ -1,0 +1,42 @@
+---
+- name: Copy files
+  ansible.windows.win_copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    force: "{{ item.force | default(omit) }}"
+    backup: "{{ item.backup | default(omit) }}"
+    remote_src: "{{ item.remote_src | default(omit) }}"
+    local_follow: "{{ item.local_follow | default(omit) }}"
+  register: copy_files
+  loop: "{{ files_copy | default([], true) }}"
+  loop_control:
+    label: "{{ item.src + ' -> ' + item.dest }}"
+
+- name: Create files from templates
+  ansible.windows.win_template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    force: "{{ item.force | default(omit) }}"
+    backup: "{{ item.backup | default(omit) }}"
+    output_encoding: "{{ item.output_encoding | default(omit) }}"
+    newline_sequence: "{{ item.newline_sequence | default(omit) }}"
+    variable_start_string: "{{ item.variable_start_string | default(omit) }}"
+    variable_end_string: "{{ item.variable_end_string | default(omit) }}"
+    block_start_string: "{{ item.block_start_string | default(omit) }}"
+    block_end_string: "{{ item.block_end_string | default(omit) }}"
+    lstrip_blocks: "{{ item.lstrip_blocks | default(omit) }}"
+    trim_blocks: "{{ item.trim_blocks | default(omit) }}"
+  register: copy_templates
+  loop: "{{ files_copy_templates | default([], true) }}"
+  loop_control:
+    label: "{{ item.src + ' -> ' + item.dest }}"
+
+- name: Update path owner
+  ansible.windows.win_owner:
+    path: "{{ item.dest }}"
+    user: "{{ item.owner }}"
+    recurse: false
+  loop: "{{ (files_copy | default([], true) + files_copy_templates | default([], true))
+            | selectattr('owner', 'defined') }}"
+  loop_control:
+    label: "{{ item.dest }}"

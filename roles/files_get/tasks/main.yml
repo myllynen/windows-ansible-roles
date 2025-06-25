@@ -1,0 +1,44 @@
+---
+- name: Get files
+  vars:
+    passwords_used: "{{ files_get | default([], true) | selectattr('url_password', 'defined') | length > 0 }}"
+  no_log: "{{ passwords_used and files_get_no_log }}"
+  # noqa: risky-file-permissions
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    url_username: "{{ item.url_username | default(omit) }}"
+    url_password: "{{ item.url_password | default(omit) }}"
+    url_timeout: "{{ item.timeout | default(omit) }}"
+    url_method: "{{ item.method | default(omit) }}"
+    validate_certs: "{{ item.validate_certs | default(omit) }}"
+    force_basic_auth: "{{ item.force_basic_auth | default(omit) }}"
+    use_default_credential: "{{ item.use_default_credential | default(omit) }}"
+    http_agent: "{{ item.http_agent | default(omit) }}"
+    use_proxy: "{{ item.use_proxy | default(omit) }}"
+    proxy_url: "{{ item.proxy_url | default(omit) }}"
+    proxy_username: "{{ item.proxy_username | default(omit) }}"
+    proxy_password: "{{ item.proxy_password | default(omit) }}"
+    proxy_use_default_credential: "{{ item.proxy_use_default_credential | default(omit) }}"
+    headers: "{{ item.headers | default(omit) }}"
+    follow_redirects: "{{ item.follow_redirects | default(omit) }}"
+    maximum_redirection: "{{ item.maximum_redirection | default(omit) }}"
+    client_cert: "{{ item.client_cert | default(omit) }}"
+    client_cert_password: "{{ item.client_cert_password | default(omit) }}"
+    dest: "{{ item.dest }}"
+    force: "{{ item.force | default(omit) }}"
+    checksum: "{{ item.checksum | default(omit) }}"
+    checksum_algorithm: "{{ item.checksum_algorithm | default(omit) }}"
+    checksum_url: "{{ item.checksum_url | default(omit) }}"
+  register: get_files
+  loop: "{{ files_get | default([], true) }}"
+  loop_control:
+    label: "{{ item.dest }}"
+
+- name: Update path owner
+  ansible.windows.win_owner:
+    path: "{{ item.dest }}"
+    user: "{{ item.owner }}"
+    recurse: false
+  loop: "{{ files_get | select | selectattr('owner', 'defined') }}"
+  loop_control:
+    label: "{{ item.dest }}"

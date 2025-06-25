@@ -1,0 +1,18 @@
+---
+# List of files and directories to copy
+# Uses ansible.windows.win_copy module
+# Owner set with win_owner if defined
+# Registers variable: copy_files
+files_copy:
+#  - src: /local/src/test.file
+#    dest: C:\Temp\test.file
+#    #owner: BUILTIN\Administrators
+
+# List of templates to render
+# Uses ansible.windows.win_template
+# Owner set with win_owner if defined
+# Registers variable: copy_templates
+files_copy_templates:
+#  - src: settings.conf.j2
+#    dest: C:\Tools\settings.conf
+#    #owner: S-1-5-21-...-1000

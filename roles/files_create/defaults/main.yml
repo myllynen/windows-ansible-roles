@@ -1,0 +1,14 @@
+---
+# List of directories and files to create
+# Uses ansible.windows.win_file module
+# Owner set with win_owner if defined
+# Registers variables:
+# create_directories, create_files
+files_create:
+#  - state: directory
+#    path: C:\Tools
+#    #owner: BUILTIN\Administrators
+#    #recurse: true
+#  - state: file
+#    path: C:\Tools\log.txt
+#    #owner: S-1-5-21-...-1000

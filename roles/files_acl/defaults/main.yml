@@ -1,0 +1,12 @@
+---
+# List of ACLs to apply to files etc
+# Uses ansible.windows.win_acl module
+# Owner set with win_owner if defined
+# Registers variable: acl_files
+files_acl:
+#  - path: C:\Temp\log.txt
+#    #owner: BUILTIN\Administrator
+#    user: testuser
+#    type: deny
+#    rights: Read,Write,Modify,FullControl,Delete
+#    state: present
