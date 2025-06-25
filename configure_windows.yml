@@ -60,6 +60,73 @@
     # Show or hide Ansible user on Welcome Screen
     accounts_local_ansible_user_show_on_welcome: false
 
+
+    # List of user profiles to delete
+    # NB. Removes all matching profiles
+    accounts_local_profiles_delete:
+    #  - testuser
+    #  - S-1-5-21-...-1000
+
+    # List of local users to delete
+    accounts_local_users_delete:
+    #  - testuser
+
+    # List of local groups to delete
+    accounts_local_groups_delete:
+    #  - testgroup
+
+    # List of local groups to create
+    # Mandatory parameters: name
+    accounts_local_groups_create:
+    #  - name: testgroup
+    #    description: Test Group
+
+    # List of local users to create
+    # Mandatory parameters: name
+    # All users should be added to Users
+    accounts_local_users_create:
+    #  - name: testuser
+    #    fullname: Test User
+    #    description: User for testing
+    #    password: Foobar_12
+    #    password_expired: false
+    #    password_never_expires: true
+    #    user_cannot_change_password: false
+    #    groups_action: add
+    #    groups:
+    #      - Users
+    #    account_disabled: false
+    #    account_expires: never
+    #    account_locked: false
+    #    login_script: C:\Users\login.ps1
+    #    home_directory: C:\Users\testuser
+
+    # Value for no_log parameter when setting passwords
+    accounts_local_no_log: true
+
+    # List of local group memberships to configure
+    # Mandatory parameters: name, members, state
+    # Set state to pure to make membership explicit
+    accounts_local_group_members:
+    #  - name: testgroup
+    #    members:
+    #      - testuser
+    #    state: pure
+
+    # List of local rights settings to configure
+    # Mandatory parameters: name, users, action
+    accounts_local_users_rights:
+    #  - name: SeCreateSymbolicLinkPrivilege
+    #    users:
+    #      - testuser
+    #    action: remove
+
+    # List of user profiles to create
+    # Mandatory parameters: username
+    accounts_local_profiles_create:
+    #  - username: testuser
+    #    name: test-testuser
+
     #
     # boot_configuration
     #
@@ -68,13 +135,15 @@
     #
     # dns_client
     #
-    # Target network adapters
-    dns_client_adapter_names: '*'
-
-    # List of DNS servers
-    dns_client_dns_servers:
-    #  - 1.1.1.1
-    #  - 8.8.8.8
+    # List of DNS client configurations
+    dns_client_configurations:
+    #  - adapter_names: '*'
+    #    dns_servers:
+    #      - 1.1.1.1
+    #      - 8.8.8.8
+    #    suffix_search_list:
+    #      - contoso.com
+    #      - example.com
 
     #
     # dotnet_optimize
@@ -159,6 +228,63 @@
     dsc_settings_reboot: true
 
     #
+    # environment_settings
+    #
+    # Path environment settings to configure
+    # Each setting requires: scope, name, elements, state
+    # Optional: reboot (true/false, defaults to false if omitted)
+    environment_settings_paths:
+    #  # These are for connecting user only
+    #  - scope: user
+    #    name: CLASSPATH
+    #    elements: C:\Java
+    #    state: present
+    #  - scope: user
+    #    name: CLASSPATH
+    #    elements: C:\OldJava
+    #    state: absent
+    #
+    #  # These are for all users
+    #  - scope: machine
+    #    name: PATH
+    #    elements: C:\Tools\bin
+    #    state: present
+    #
+    #  # Reboot if updated and environment_settings_reboot is true
+    #  - scope: machine
+    #    name: PATH
+    #    elements:
+    #      - C:\Dangerous\bin
+    #      - C:\Migration\bin
+    #    state: absent
+    #    reboot: true
+
+    # Environment variable settings to configure
+    # Each setting requires: level, variables
+    # Optional: reboot (true/false, defaults to false if omitted)
+    environment_settings_variables:
+    #  # These are for connecting user only
+    #  - level: user
+    #    variables:
+    #      ThisIsRemoved: ''
+    #      SomeVariable: SomeValue
+    #
+    #  # These are for all users
+    #  - level: machine
+    #    variables:
+    #      TestVariable: Test value
+    #
+    #  # Reboot if updated and environment_settings_reboot is true
+    #  - level: machine
+    #    variables:
+    #      VIV: VeryImportantValue
+    #    reboot: true
+
+    # Reboot after environment setting changes
+    # Action depends on per-setting "reboot: true"
+    environment_settings_reboot: true
+
+    #
     # etc_hosts
     #
     #etc_hosts_header: - omitted here for brevity
@@ -185,6 +311,8 @@
     # ipv6 - omit all IPv6 entries
     etc_hosts_omit_entries: none
 
+    # files_{acl,copy,create,fetch,get,remove} - omitted here for brevity
+
     #
     # network_configuration
     #
@@ -197,8 +325,73 @@
     # Enable or disable NetBIOS
     network_configuration_netbios_enable: true
 
-    # Reboot after network changes
+    # Reboot after IPv6/NetBIOS changes
     network_configuration_reboot: true
+
+    # Static route configuration
+    # Each setting requires: destination, state
+    # When state is present also required: gateway, metric
+    network_configuration_routes:
+    #  - destination: 192.168.123.123/32
+    #    gateway: 192.168.1.1
+    #    metric: 1
+    #    state: present
+    #  - destination: 192.168.123.231/32
+    #    state: absent
+
+    #
+    # packages_chocolatey
+    #
+    # Parameters for Chocolatey installation
+    packages_chocolatey_update: true
+    packages_chocolatey_package_params:
+    packages_chocolatey_bootstrap_script:
+    packages_chocolatey_validate_certs: true
+
+    # Parameters to apply with win_chocolatey_source
+    packages_chocolatey_source:
+    #  - name: chocolatey
+    #    state: absent
+    #
+    #  - name: intranet repo
+    #    state: present
+    #    source: http://example.com/choco
+
+    # Parameters for Chocolatey configuration and features
+    # Items with value or state present/absent are set with
+    # win_chocolatey_config, rest with win_chocolatey_feature
+    # See https://docs.chocolatey.org/en-us/configuration/
+    packages_chocolatey_settings:
+    #  - name: cacheLocation
+    #    state: present
+    #    value: C:\Temp\choco
+    #
+    #  - name: checksumFiles
+    #    state: enabled
+    #
+    #  - name: logWithoutColor
+    #    state: enabled
+    #
+    #  - name: webRequestTimeoutSeconds
+    #    state: present
+    #    value: 10
+
+    # Parameters for package operations
+    packages_chocolatey_install_allow_prerelease: false
+    packages_chocolatey_install_ignore_dependencies: false
+    packages_chocolater_update_packages: true
+    packages_chocolatey_remove_deps: false
+
+    # Chocolatey packages to install
+    packages_chocolatey_install:
+    #  - git
+    #  - less
+    #  - nano
+    #  - vim
+
+    # Chocolatey packages to remove
+    packages_chocolatey_remove:
+    #  - emacs
 
     #
     # performance_tuning
@@ -239,6 +432,8 @@
 
     #
     # registry_settings
+    #
+    # For user-specific settings see user_settings
     #
     # Registry settings to apply with ansible.windows.win_regedit
     registry_settings:
@@ -492,6 +687,28 @@
     user_experience_show_last_user_name: true
 
     #
+    # user_settings
+    #
+    # For system-wide settings see registry_settings
+
+    # Some settings may apply only after relogin
+    user_settings_apply_to_logged_in_users: true
+
+    # User settings to apply with ansible.windows.win_regedit
+    user_settings_registry:
+    #  - setting: Minimize Visual Effects for Performance
+    #    path: HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects
+    #    name: VisualFXSetting
+    #    type: DWord
+    #    data: 2
+    #
+    #  - setting: Disable Taskbar Animations
+    #    path: HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced
+    #    name: TaskbarAnimations
+    #    type: DWord
+    #    data: 0
+
+    #
     # windows_recovery
     #
     # Enable or disable Windows Recovery Environment
@@ -519,11 +736,11 @@
     winrm_configuration_service_config:
       AllowUnencrypted: false
       Auth:
-        Basic: true
+        Basic: false
         Kerberos: true
         Negotiate: true
         Certificate: false
-        CredSSP: true
+        CredSSP: false
         CbtHardeningLevel: Strict
       IPv4Filter: '*'
       IPv6Filter: '*'
@@ -580,7 +797,8 @@
 
     # Update commands for each distribution variant
     # Patterns are case-insensitive, first match will be used
-    # wsl_configuration_distribution_update_commands defaults omitted here for brevity
+    # wsl_configuration_distribution_update_commands defaults ..
+    #  .. omitted here for brevity
 
   roles:
     - dotnet_optimize
@@ -600,9 +818,12 @@
     #- windows_recovery
     - dsc_settings
     - registry_settings
+    - environment_settings
+    #- packages_chocolatey
     - performance_tuning
     #- service_enablement
     #- service_recovery
     - user_experience
+    - user_settings
     #- system_reboot
     - system_init
