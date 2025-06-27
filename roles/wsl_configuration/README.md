@@ -12,6 +12,7 @@ Below are the role default values from defaults/main.yml:
 ---
 # Enable or disable WSL
 # Requires Windows Server 2022+
+# NB. Distros are for the connecting user
 # Disabling WSL will uninstall all currently
 # installed distributions and the WSL feature
 # Set to null to leave the current setup untouched
