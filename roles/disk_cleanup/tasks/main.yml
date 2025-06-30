@@ -1,0 +1,16 @@
+---
+- name: Clean old Windows Update files
+  vars:
+    reset_base: "{{ '/ResetBase' if disk_cleanup_windows_update_reset | bool else '' }}"
+  ansible.windows.win_command: Dism.exe /Online /Quiet /Cleanup-Image /StartComponentCleanup {{ reset_base }}
+  when: disk_cleanup_windows_update_files | bool
+
+- name: Clear Windows event logs
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      wevtutil.exe el | % {
+        try { wevtutil.exe cl $_ }
+        catch {}
+      }
+  when: disk_cleanup_event_logs | bool

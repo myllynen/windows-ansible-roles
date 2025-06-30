@@ -1,0 +1,9 @@
+---
+# Remove older versions of Windows Update files
+disk_cleanup_windows_update_files: false
+
+# Also remove files needed to uninstall updates
+disk_cleanup_windows_update_reset: false
+
+# Windows event logs clearing
+disk_cleanup_event_logs: false
