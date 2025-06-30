@@ -10,3 +10,11 @@ files_acl:
 #    type: deny
 #    rights: Read,Write,Modify,FullControl,Delete
 #    state: present
+
+# List of ACLs inheritance rules to apply to paths
+# Uses ansible.windows.win_acl_inheritance module
+# Registers variable: acl_inheritance_files
+files_acl_inheritance:
+#  - path: C:\apache
+#    state: present
+#    reorganize: true

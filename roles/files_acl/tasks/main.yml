@@ -22,3 +22,13 @@
   loop: "{{ files_acl | default([], true) | selectattr('owner', 'defined') }}"
   loop_control:
     label: "{{ item.path }}"
+
+- name: Configure ACL inheritance
+  ansible.windows.win_acl_inheritance:
+    path: "{{ item.path }}"
+    state: "{{ item.state | default(omit) }}"
+    reorganize: "{{ item.reorganize | default(omit) }}"
+  register: acl_inheritance_files
+  loop: "{{ files_acl_inheritance | default([], true) }}"
+  loop_control:
+    label: "{{ item.path }}"
