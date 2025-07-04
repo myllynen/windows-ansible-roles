@@ -60,7 +60,7 @@ wsl_configuration_distribution_update_commands:
     commands: ['apt-get update', 'apt-get upgrade -y']
   redhat_like:
     patterns: ['*Alma*', '*CentOS*', '*Fedora*', '*Oracle*', '*podman*', '*RHEL*']
-    commands: ['dnf update --refresh -y']
+    commands: ['dnf --refresh -y upgrade']
   suse_like:
     patterns: ['*SUSE*']
     commands: ['zypper update -y']
