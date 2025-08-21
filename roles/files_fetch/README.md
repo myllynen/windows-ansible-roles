@@ -11,7 +11,7 @@ Below are the role default values from defaults/main.yml:
 <pre>
 ---
 # List of files and directories to fetch
-# Uses Ansible built-in fetch module
+# Uses ansible.builtin.fetch module
 # Registers variable: fetch_files
 files_fetch:
 #  - src: C:\Temp\log.txt
