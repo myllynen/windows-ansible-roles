@@ -1,5 +1,5 @@
 ---
-# To be removed when the collection requires ansible.windows >= 3.1.0
+# XXX To be removed when the collection requires ansible.windows >= 3.1.0
 - name: Configure DNS client (without search suffix list)
   ansible.windows.win_dns_client:
     adapter_names: "{{ item.adapter_names }}"
