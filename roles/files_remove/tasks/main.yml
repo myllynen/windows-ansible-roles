@@ -22,6 +22,7 @@
     msg: "Wildcards only supported for the last element."
   loop: "{{ files_remove | default([], true) | map('win_dirname') | select('search', '\\?|\\*|\\[') }}"
 
+# XXX Use file_type: any when the collection requires ansible.windows >= 3.2.0
 - name: Locate wildcard files to be removed
   ansible.windows.win_find:
     paths: "{{ item | win_dirname }}"
@@ -29,6 +30,7 @@
     file_type: file
     hidden: true
     recurse: "{{ files_remove_recursive | bool }}"
+    case_sensitive: "{{ files_remove_case_sensitive | bool }}"
   register: remove_wildcard_files
   loop: "{{ files_remove | select('search', '\\?|\\*|\\[') }}"
 
@@ -39,6 +41,7 @@
     file_type: directory
     hidden: true
     recurse: "{{ files_remove_recursive | bool }}"
+    case_sensitive: "{{ files_remove_case_sensitive | bool }}"
   register: remove_wildcard_dirs
   loop: "{{ files_remove | select('search', '\\?|\\*|\\[') }}"
 

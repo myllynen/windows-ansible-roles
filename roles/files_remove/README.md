@@ -35,6 +35,9 @@ files_remove_recursive: false
 # Useful with wildcards, optional to use
 files_remove_exclude:
 #  - C:\Tools\conf\base.conf
+
+# Enable or disable case-sensitive find
+files_remove_case_sensitive: false
 </pre>
 
 ## License
