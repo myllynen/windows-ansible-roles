@@ -20,6 +20,8 @@
     backup: "{{ item.backup | default(omit) }}"
     output_encoding: "{{ item.output_encoding | default(omit) }}"
     newline_sequence: "{{ item.newline_sequence | default(omit) }}"
+    comment_start_string: "{{ item.comment_start_string | default(omit) }}"
+    comment_end_string: "{{ item.comment_end_string | default(omit) }}"
     variable_start_string: "{{ item.variable_start_string | default(omit) }}"
     variable_end_string: "{{ item.variable_end_string | default(omit) }}"
     block_start_string: "{{ item.block_start_string | default(omit) }}"
