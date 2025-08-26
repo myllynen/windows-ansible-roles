@@ -1,17 +1,4 @@
 ---
-# XXX To be removed when the collection requires ansible.windows >= 3.1.0
-- name: Configure DNS client (without search suffix list)
-  ansible.windows.win_dns_client:
-    adapter_names: "{{ item.adapter_names }}"
-    dns_servers: "{{ item.dns_servers }}"
-  register: dns_client_config
-  loop: "{{ dns_client_configurations | select }}"
-  loop_control:
-    label: "{{ item.adapter_names }}"
-  when:
-    - item.dns_servers is not none
-    - item.suffix_search_list is none
-
 - name: Configure DNS client
   ansible.windows.win_dns_client:
     adapter_names: "{{ item.adapter_names }}"
@@ -21,10 +8,6 @@
   loop: "{{ dns_client_configurations | select }}"
   loop_control:
     label: "{{ item.adapter_names }}"
-  when:
-    - item.dns_servers is not none
-    - item.suffix_search_list is defined
-    - item.suffix_search_list is not none
 
 - name: Flush DNS resolver cache
   ansible.windows.win_command: ipconfig.exe /flushdns
