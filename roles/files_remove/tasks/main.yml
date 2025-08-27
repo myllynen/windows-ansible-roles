@@ -30,7 +30,7 @@
     hidden: true
     recurse: "{{ files_remove_recursive | bool }}"
     case_sensitive: "{{ files_remove_case_sensitive | bool }}"
-  register: remove_wildcard_files
+  register: remove_wildcard_paths
   loop: "{{ files_remove | select('search', '\\?|\\*|\\[') }}"
 
 # Remove set paths from possible previous role execution
@@ -41,7 +41,7 @@
 - name: Set wildcard files and directories to remove
   ansible.builtin.set_fact:
     wildcard_paths: "{{ wildcard_paths + item.files | map(attribute='path') }}"
-  loop: "{{ remove_wildcard_files.results + remove_wildcard_dirs.results }}"
+  loop: "{{ remove_wildcard_paths.results }}"
   loop_control:
     label: "{{ item.files | map(attribute='path') }}"
   when: item.files | length > 0
