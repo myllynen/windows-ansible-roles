@@ -15,7 +15,7 @@
     quiet: true
   loop: "{{ dsc_settings | select }}"
   loop_control:
-    label: "{{ item.setting | default(omit) }}"
+    label: "{{ item.setting | default('') }}"
 
 # Set inject_facts_as_vars = False to avoid warnings
 - name: Apply DSC settings

@@ -16,7 +16,7 @@
     quiet: true
   loop: "{{ environment_settings_paths | select }}"
   loop_control:
-    label: "{{ item.name | default(omit) }}"
+    label: "{{ item.name | default('') }}"
 
 - name: Verify environment variable settings format
   ansible.builtin.assert:
@@ -33,7 +33,7 @@
     quiet: true
   loop: "{{ environment_settings_variables | select }}"
   loop_control:
-    label: "{{ item.variables.keys() | default(omit) }}"
+    label: "{{ item.variables.keys() | default('') }}"
 
 - name: Configure path environment settings
   ansible.windows.win_path:

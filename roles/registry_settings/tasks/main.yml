@@ -20,7 +20,7 @@
     quiet: true
   loop: "{{ registry_settings | select }}"
   loop_control:
-    label: "{{ item.setting | default(omit) }}"
+    label: "{{ item.setting | default('') }}"
 
 - name: Apply registry settings
   ansible.windows.win_regedit:
