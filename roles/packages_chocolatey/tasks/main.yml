@@ -13,16 +13,16 @@
     package_params: "{{ packages_chocolatey_package_params | default(omit, true) }}"
     bootstrap_script: "{{ packages_chocolatey_bootstrap_script | default(omit, true) }}"
     validate_certs: "{{ packages_chocolatey_validate_certs | default(omit, true) }}"
+  register: choco_install
   when: (choco_present is not skipped and choco_present.rc != 0) or
         packages_chocolatey_update | bool
 
-- name: Restart in-use sshd service to apply PATH changes
-  ansible.windows.win_service:
-    name: sshd
-    state: restarted
+- name: Include tasks to update PATH for SSH
+  ansible.builtin.include_tasks: ssh.yml
   when:
     - ansible_connection == 'ssh'
-    - choco_present.rc != 0
+    - choco_install.warnings is defined
+    - "'was installed' in choco_install.warnings[0]"
 
 - name: Configure Chocolatey - source
   chocolatey.chocolatey.win_chocolatey_source:
@@ -46,7 +46,9 @@
   chocolatey.chocolatey.win_chocolatey_config:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
-  loop: "{{ packages_chocolatey_settings | selectattr('value', 'defined') | selectattr('state', 'in', ['absent', 'present']) }}"
+  loop: "{{ packages_chocolatey_settings
+            | selectattr('value', 'defined')
+            | selectattr('state', 'in', ['absent', 'present']) }}"
   loop_control:
     label: "{{ item.name }}"
 
@@ -54,15 +56,22 @@
   chocolatey.chocolatey.win_chocolatey_feature:
     name: "{{ item.name }}"
     state: "{{ item.state }}"
-  loop: "{{ packages_chocolatey_settings | selectattr('value', 'undefined') | selectattr('state', 'in', ['disabled', 'enabled']) }}"
+  loop: "{{ packages_chocolatey_settings
+            | selectattr('value', 'undefined')
+            | selectattr('state', 'in', ['disabled', 'enabled']) }}"
   loop_control:
     label: "{{ item.name }}"
 
 - name: Remove unwanted Chocolatey packages
+  vars:
+    remove_packages: "{{ packages_chocolatey_remove | select
+                         | difference(packages_chocolatey_install | select) }}"
   chocolatey.chocolatey.win_chocolatey:
-    name: "{{ packages_chocolatey_remove | select }}"
+    name: "{{ remove_packages }}"
     state: absent
     remove_dependencies: "{{ packages_chocolatey_remove_deps }}"
+  register: removed_choco_packages
+  when: remove_packages | length > 0
 
 - name: Install wanted Chocolatey packages
   chocolatey.chocolatey.win_chocolatey:
@@ -70,9 +79,12 @@
     state: present
     allow_prerelease: "{{ packages_chocolatey_install_allow_prerelease }}"
     ignore_dependencies: "{{ packages_chocolatey_install_ignore_dependencies }}"
+  register: installed_choco_packages
+  when: packages_chocolatey_install | select | length > 0
 
 - name: Update Chocolatey packages
   chocolatey.chocolatey.win_chocolatey:
     name: all
     state: latest
+  register: updated_choco_packages
   when: packages_chocolater_update_packages | bool

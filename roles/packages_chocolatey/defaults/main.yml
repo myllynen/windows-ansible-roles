@@ -39,13 +39,13 @@ packages_chocolatey_install_ignore_dependencies: false
 packages_chocolater_update_packages: true
 packages_chocolatey_remove_deps: false
 
+# Chocolatey packages to remove
+packages_chocolatey_remove:
+#  - emacs
+
 # Chocolatey packages to install
 packages_chocolatey_install:
 #  - git
 #  - less
 #  - nano
 #  - vim
-
-# Chocolatey packages to remove
-packages_chocolatey_remove:
-#  - emacs

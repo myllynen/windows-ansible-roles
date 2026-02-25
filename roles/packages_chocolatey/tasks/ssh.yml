@@ -1,0 +1,9 @@
+---
+- name: Restart in-use sshd service to apply PATH changes
+  ansible.windows.win_service:
+    name: sshd
+    state: restarted
+
+# NB. reset_connection does not support when
+- name: Reset connection to use PATH changes
+  meta: reset_connection
