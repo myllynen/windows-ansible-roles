@@ -1,4 +1,7 @@
 ---
+# This role is obsolete and deprecated,
+# use the service_management role instead
+
 service_enablement_disable:
   - WbioSrvc
 

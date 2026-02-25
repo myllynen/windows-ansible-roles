@@ -10,6 +10,9 @@ Below are the role default values from defaults/main.yml:
 
 <pre>
 ---
+# This role is obsolete and deprecated,
+# use the service_management role instead
+
 service_enablement_disable:
   - WbioSrvc
 
