@@ -12,6 +12,11 @@
   ansible.windows.win_file:
     state: touch
     path: "{{ item.path }}"
+    # Need ansible.windows >= 3.4.0
+    #access_time: "{{ item.access_time | default(omit) }}"
+    #access_time_format: "{{ item.access_time_format | default(omit) }}"
+    #modification_time: "{{ item.modification_time | default(omit) }}"
+    #modification_time_format: "{{ item.modification_time_format | default(omit) }}"
   register: create_files
   loop: "{{ files_create | selectattr('state', 'equalto', 'file') }}"
   loop_control:
@@ -22,6 +27,6 @@
     path: "{{ item.path }}"
     user: "{{ item.owner }}"
     recurse: "{{ item.recurse | default(omit) }}"
-  loop: "{{ files_create | select | selectattr('owner', 'defined') }}"
+  loop: "{{ files_create | selectattr('owner', 'defined') }}"
   loop_control:
     label: "{{ item.path }}"

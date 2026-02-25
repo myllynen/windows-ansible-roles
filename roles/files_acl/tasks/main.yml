@@ -10,7 +10,7 @@
     inherit: "{{ item.inherit | default(omit) }}"
     propagation: "{{ item.propagation | default(omit) }}"
   register: acl_files
-  loop: "{{ files_acl | default([], true) }}"
+  loop: "{{ files_acl | select }}"
   loop_control:
     label: "{{ item.path }}"
 
@@ -19,7 +19,7 @@
     path: "{{ item.path }}"
     user: "{{ item.owner }}"
     recurse: "{{ item.recurse | default(omit) }}"
-  loop: "{{ files_acl | default([], true) | selectattr('owner', 'defined') }}"
+  loop: "{{ files_acl | selectattr('owner', 'defined') }}"
   loop_control:
     label: "{{ item.path }}"
 
@@ -29,6 +29,6 @@
     state: "{{ item.state | default(omit) }}"
     reorganize: "{{ item.reorganize | default(omit) }}"
   register: acl_inheritance_files
-  loop: "{{ files_acl_inheritance | default([], true) }}"
+  loop: "{{ files_acl_inheritance | select }}"
   loop_control:
     label: "{{ item.path }}"

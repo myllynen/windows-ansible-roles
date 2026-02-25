@@ -1,16 +1,17 @@
 ---
 - name: Copy files
   ansible.windows.win_copy:
-    src: "{{ item.src }}"
+    src: "{{ item.src | default(omit) }}"
+    content: "{{ item.content | default(omit) }}"
     dest: "{{ item.dest }}"
     force: "{{ item.force | default(omit) }}"
     backup: "{{ item.backup | default(omit) }}"
     remote_src: "{{ item.remote_src | default(omit) }}"
     local_follow: "{{ item.local_follow | default(omit) }}"
   register: copy_files
-  loop: "{{ files_copy | default([], true) }}"
+  loop: "{{ files_copy | select }}"
   loop_control:
-    label: "{{ item.src + ' -> ' + item.dest }}"
+    label: "{{ item.src | default('(inline content)') + ' -> ' + item.dest }}"
 
 - name: Create files from templates
   ansible.windows.win_template:
@@ -29,7 +30,7 @@
     lstrip_blocks: "{{ item.lstrip_blocks | default(omit) }}"
     trim_blocks: "{{ item.trim_blocks | default(omit) }}"
   register: copy_templates
-  loop: "{{ files_copy_templates | default([], true) }}"
+  loop: "{{ files_copy_templates | select }}"
   loop_control:
     label: "{{ item.src + ' -> ' + item.dest }}"
 
@@ -38,7 +39,7 @@
     path: "{{ item.dest }}"
     user: "{{ item.owner }}"
     recurse: false
-  loop: "{{ (files_copy | default([], true) + files_copy_templates | default([], true))
+  loop: "{{ (files_copy | select + files_copy_templates | select)
             | selectattr('owner', 'defined') }}"
   loop_control:
     label: "{{ item.dest }}"

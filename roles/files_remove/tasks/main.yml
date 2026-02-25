@@ -8,19 +8,19 @@
 - name: Fail if incorrect path format in use
   ansible.builtin.fail:
     msg: "Path must contain '\\'."
-  loop: "{{ files_remove | default([], true) + files_remove_exclude | default([], true) }}"
+  loop: "{{ files_remove | select + files_remove_exclude | select }}"
   when: "'\\\\' not in item"
 
 - name: Fail if incorrect exclude format in use
   ansible.builtin.fail:
     msg: "Wildcards not supported for exclusion."
-  loop: "{{ files_remove_exclude | default([], true) }}"
+  loop: "{{ files_remove_exclude | select }}"
   when: "'*' in item or '?' in item or '[' in item"
 
 - name: Fail if incorrect wildcard pattern in use
   ansible.builtin.fail:
     msg: "Wildcards only supported for the last element."
-  loop: "{{ files_remove | default([], true) | map('win_dirname') | select('search', '\\?|\\*|\\[') }}"
+  loop: "{{ files_remove | select | map('win_dirname') | select('search', '\\?|\\*|\\[') }}"
 
 - name: Locate wildcard files and directories to be removed
   ansible.windows.win_find:

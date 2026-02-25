@@ -1,7 +1,7 @@
 ---
 - name: Get files
   vars:
-    passwords_used: "{{ files_get | default([], true) | selectattr('url_password', 'defined') | length > 0 }}"
+    passwords_used: "{{ files_get | selectattr('url_password', 'defined') | length > 0 }}"
   no_log: "{{ passwords_used and files_get_no_log }}"
   # noqa: risky-file-permissions
   ansible.builtin.get_url:
@@ -30,7 +30,7 @@
     checksum_algorithm: "{{ item.checksum_algorithm | default(omit) }}"
     checksum_url: "{{ item.checksum_url | default(omit) }}"
   register: get_files
-  loop: "{{ files_get | default([], true) }}"
+  loop: "{{ files_get | select }}"
   loop_control:
     label: "{{ item.dest }}"
 
@@ -39,6 +39,6 @@
     path: "{{ item.dest }}"
     user: "{{ item.owner }}"
     recurse: false
-  loop: "{{ files_get | select | selectattr('owner', 'defined') }}"
+  loop: "{{ files_get | selectattr('owner', 'defined') }}"
   loop_control:
     label: "{{ item.dest }}"
