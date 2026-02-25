@@ -1,0 +1,233 @@
+---
+- name: Get list of initial services
+  check_mode: false
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      $Ansible.Changed = $false
+      $Ansible.Result = @((Get-Service | % { $_.Name.ToLower() }))
+  register: initial_services
+
+- name: Pause service
+  ansible.windows.win_service:
+    name: "{{ item.name }}"
+    state: paused
+  register: paused_services
+  loop: "{{ service_management_disable
+            | selectattr('state', 'defined')
+            | selectattr('state', 'equalto', 'paused') }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.name not in service_management_enable | select | map(attribute='name')
+    - item.name | lower in initial_services.result or
+      not service_management_ignore_missing | bool
+
+- name: Stop service
+  ansible.windows.win_service:
+    name: "{{ item.name }}"
+    state: stopped
+  register: stopped_services
+  loop: "{{ service_management_disable
+            | selectattr('state', 'defined')
+            | selectattr('state', 'equalto', 'stopped') }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.name not in service_management_enable | select | map(attribute='name')
+    - item.name | lower in initial_services.result or
+      not service_management_ignore_missing | bool
+
+- name: Disable service
+  ansible.windows.win_service:
+    name: "{{ item.name }}"
+    start_mode: disabled
+  register: disabled_services
+  loop: "{{ service_management_disable
+            | selectattr('start_mode', 'defined')
+            | selectattr('start_mode', 'equalto', 'disabled') }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - item.name not in service_management_enable | select | map(attribute='name')
+    - item.name | lower in initial_services.result or
+      not service_management_ignore_missing | bool
+
+- name: Remove service
+  ansible.windows.win_service:
+    name: "{{ item.name }}"
+    state: absent
+  register: removed_services
+  loop: "{{ service_management_disable
+            | selectattr('state', 'defined')
+            | selectattr('state', 'equalto', 'absent') }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.name not in service_management_enable | select | map(attribute='name')
+
+- name: Create service
+  ansible.windows.win_service:
+    name: "{{ item.name }}"
+    path: "{{ item.path }}"
+    description: "{{ item.description | default(omit) }}"
+    display_name: "{{ item.display_name | default(omit) }}"
+    username: "{{ item.username | default(omit) }}"
+    password: "{{ item.password | default(omit) }}"
+    start_mode: disabled
+    state: stopped
+    dependencies: "{{ item.dependencies | default(omit) }}"
+    dependency_action: "{{ item.dependency_action | default(omit) }}"
+    force_dependent_services: "{{ item.force_dependent_services | default(omit) }}"
+    desktop_interact: "{{ item.desktop_interact | default(omit) }}"
+    load_order_group: "{{ item.load_order_group | default(omit) }}"
+    error_control: "{{ item.error_control | default(omit) }}"
+    failure_actions: "{{ item.failure_actions | default(omit) }}"
+    failure_actions_on_non_crash_failure: "{{ item.failure_actions_on_non_crash_failure | default(omit) }}"
+    failure_command: "{{ item.failure_command | default(omit) }}"
+    failure_reboot_msg: "{{ item.failure_reboot_msg | default(omit) }}"
+    failure_reset_period_sec: "{{ item.failure_reset_period_sec | default(omit) }}"
+    pre_shutdown_timeout_ms: "{{ item.pre_shutdown_timeout_ms | default(omit) }}"
+    required_privileges: "{{ item.required_privileges | default(omit) }}"
+    service_type: "{{ item.service_type | default(omit) }}"
+    sid_info: "{{ item.sid_info | default(omit) }}"
+    update_password: "{{ item.update_password | default(omit) }}"
+  register: created_services
+  loop: "{{ service_management_enable
+            | selectattr('path', 'defined') }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.name | lower not in initial_services.result
+
+- name: Get list of current services
+  check_mode: false
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      $Ansible.Changed = $false
+      $Ansible.Result = @((Get-Service | % { $_.Name.ToLower() }))
+  register: current_services
+
+- name: Configure service
+  ansible.windows.win_service:
+    name: "{{ item.name }}"
+    path: "{{ item.path | default(omit) }}"
+    description: "{{ item.description | default(omit) }}"
+    display_name: "{{ item.display_name | default(omit) }}"
+    username: "{{ item.username | default(omit) }}"
+    password: "{{ item.password | default(omit) }}"
+    #start_mode: "{{ item.start_mode | default(omit) }}"
+    #state: "{{ item.state | default(omit) }}"
+    dependencies: "{{ item.dependencies | default(omit) }}"
+    dependency_action: "{{ item.dependency_action | default(omit) }}"
+    force_dependent_services: "{{ item.force_dependent_services | default(omit) }}"
+    desktop_interact: "{{ item.desktop_interact | default(omit) }}"
+    load_order_group: "{{ item.load_order_group | default(omit) }}"
+    error_control: "{{ item.error_control | default(omit) }}"
+    failure_actions: "{{ item.failure_actions | default(omit) }}"
+    failure_actions_on_non_crash_failure: "{{ item.failure_actions_on_non_crash_failure | default(omit) }}"
+    failure_command: "{{ item.failure_command | default(omit) }}"
+    failure_reboot_msg: "{{ item.failure_reboot_msg | default(omit) }}"
+    failure_reset_period_sec: "{{ item.failure_reset_period_sec | default(omit) }}"
+    pre_shutdown_timeout_ms: "{{ item.pre_shutdown_timeout_ms | default(omit) }}"
+    required_privileges: "{{ item.required_privileges | default(omit) }}"
+    service_type: "{{ item.service_type | default(omit) }}"
+    sid_info: "{{ item.sid_info | default(omit) }}"
+    update_password: "{{ item.update_password | default(omit) }}"
+  register: configured_services
+  loop: "{{ service_management_enable | select }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - created_services.results
+      | selectattr('item.name', 'equalto', item.name)
+      | selectattr('changed', 'equalto', true) | length == 0
+    - item | dict2items | rejectattr('key', 'in', ['name', 'start_mode', 'state']) | length > 0
+    - item.name | lower in current_services.result or
+      not service_management_ignore_missing | bool
+
+- name: Enable service - auto
+  ansible.windows.win_service:
+    name: "{{ item.name }}"
+    start_mode: auto
+  register: enabled_services_auto
+  loop: "{{ service_management_enable
+            | selectattr('start_mode', 'defined')
+            | selectattr('start_mode', 'equalto', 'auto') }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.name | lower in current_services.result or
+        not service_management_ignore_missing | bool
+
+- name: Enable service - delayed
+  ansible.windows.win_service:
+    name: "{{ item.name }}"
+    start_mode: delayed
+  register: enabled_services_delayed
+  loop: "{{ service_management_enable
+            | selectattr('start_mode', 'defined')
+            | selectattr('start_mode', 'equalto', 'delayed') }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.name | lower in current_services.result or
+        not service_management_ignore_missing | bool
+
+- name: Enable service - manual
+  ansible.windows.win_service:
+    name: "{{ item.name }}"
+    start_mode: manual
+  register: enabled_services_manual
+  loop: "{{ service_management_enable
+            | selectattr('start_mode', 'defined')
+            | selectattr('start_mode', 'equalto', 'manual') }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.name | lower in current_services.result or
+        not service_management_ignore_missing | bool
+
+- name: Start service
+  ansible.windows.win_service:
+    name: "{{ item.name }}"
+    state: started
+  register: started_services
+  loop: "{{ service_management_enable
+            | selectattr('state', 'defined')
+            | selectattr('state', 'equalto', 'started') }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.name | lower in current_services.result or
+        not service_management_ignore_missing | bool
+
+- name: Restart service
+  vars:
+    changed_services: >
+      {{
+        configured_services.results
+        | selectattr('changed', 'equalto', true)
+        | map(attribute='item.name')
+      }}
+    changed_started: >
+      {{
+        started_services.results
+        | selectattr('changed', 'equalto', true)
+        | map(attribute='item.name')
+      }}
+    services_to_restart: >
+      {{
+        (service_management_enable
+        | selectattr('state', 'defined')
+        | selectattr('state', 'equalto', 'restarted'))
+        + (service_management_enable
+          | selectattr('restart_configured', 'defined')
+          | selectattr('restart_configured', 'equalto', true)
+          | selectattr('name', 'in', changed_services)
+          | rejectattr('name', 'in', changed_started))
+      }}
+  ansible.windows.win_service:
+    name: "{{ item.name }}"
+    state: restarted
+  register: restarted_services
+  loop: "{{ services_to_restart }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: item.name | lower in current_services.result or
+        not service_management_ignore_missing | bool
