@@ -1,0 +1,19 @@
+---
+# DSC3 settings to apply with ansible.windows.dsc3
+# Each setting requires: setting and config or config_file
+# Optional: parameters, trace_level, remote_config_file,
+#           reboot (true/false, defaults to false if omitted)
+dsc3_settings:
+#  - setting: Install .NET
+#    config:
+#      resources:
+#        - name: Install .NET Framework
+#          type: Microsoft.WinGet/Package
+#          properties:
+#            id: Microsoft.DotNet.Framework.DeveloperPack_4
+#            source: winget
+#    reboot: true
+
+# Reboot after DSC3 changes
+# Action depends on per-setting "reboot: true"
+dsc3_settings_reboot: true

@@ -1,0 +1,43 @@
+---
+- name: Verify DSC3 settings format
+  ansible.builtin.assert:
+    that:
+      - item.setting is defined and item.setting is string
+      - (item.config is defined and item.config is mapping) or
+        (item.config_file is defined and item.config_file is string)
+      - item.trace_level is not defined or
+        item.trace_level in ['error', 'warn', 'info', 'debug', 'trace']
+    fail_msg: |
+      Invalid or incomplete DSC3 setting:
+
+      {{ item | to_nice_yaml }}
+    quiet: true
+  loop: "{{ dsc3_settings | select }}"
+  loop_control:
+    label: "{{ item.setting | default('') }}"
+
+- name: Apply DSC3 settings
+  ansible.windows.dsc3:
+    config: "{{ item.config | default(omit) }}"
+    config_file: "{{ item.config_file | default(omit) }}"
+    remote_config_file: "{{ item.remote_config_file | default(omit) }}"
+    parameters: "{{ item.parameters | default(omit) }}"
+    trace_level: "{{ item.trace_level | default(omit) }}"
+  register: dsc3_config
+  loop: "{{ dsc3_settings | select }}"
+  loop_control:
+    label: "{{ item.setting }}"
+
+- name: Reboot system
+  vars:
+    reboot_needed: "{{ dsc3_config.results
+                       | selectattr('item.reboot', 'defined')
+                       | selectattr('item.reboot', 'equalto', true)
+                       | selectattr('changed', 'equalto', true) | length > 0 }}"
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after DSC3 changes"
+  when:
+    - dsc3_settings_reboot | bool
+    - dsc3_config is changed
+    - reboot_needed
