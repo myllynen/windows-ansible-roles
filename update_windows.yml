@@ -10,7 +10,6 @@
     # Ansible WinRM configuration
     #
     #ansible_connection: winrm
-    #ansible_pipelining: true
     #ansible_winrm_port: 5985
     #ansible_winrm_scheme: http
     #ansible_winrm_transport: ntlm
@@ -24,7 +23,6 @@
     # Ansible psrp configuration
     #
     ansible_connection: psrp
-    ansible_pipelining: true
     ansible_psrp_port: 5985
     ansible_psrp_protocol: http
     ansible_psrp_auth: ntlm
@@ -97,3 +95,4 @@
   roles:
     - dotnet_optimize
     - system_update
+

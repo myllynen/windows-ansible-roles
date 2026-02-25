@@ -25,7 +25,7 @@ for all the configuration options these roles support and how they could
 be used together.
 
 These roles have been tested with updated Windows Server 2019/2022/2025
-using Ansible 2.18 - 2.19. READMEs of roles will list supported versions
+using Ansible 2.18 - 2.20. READMEs of roles will list supported versions
 where needed, by default all roles support all those Windows versions.
 
 The roles will gather the minimum set of facts as needed meaning that
