@@ -1,0 +1,45 @@
+---
+# List of firewall profiles to disable
+# Uses ansible.windows.win_firewall module
+firewall_profiles_disable:
+#  - profiles:
+#      - trusted
+
+# List of firewall profiles to enable
+# Uses ansible.windows.win_firewall module
+firewall_profiles_enable:
+#  - profiles:
+#      - domain
+#      - private
+#      - public
+
+# List of firewall rules to disable
+# Uses community.windows.win_firewall_rule module
+firewall_rules_disable:
+#  - name: Remote Desktop - User Mode (TCP-In)
+#    description: >-
+#      Inbound rule for the Remote Desktop service to allow RDP traffic. [TCP 3389]
+#    group: '@FirewallAPI.dll,-28752'
+#    localport: 3389
+#    action: allow
+#    direction: in
+#    protocol: tcp
+#    profiles:
+#      - domain
+#      - private
+#      - public
+
+# List of firewall rules to enable
+# Uses community.windows.win_firewall_rule module
+firewall_rules_enable:
+#  - name: OpenSSH SSH Server (sshd)
+#    description: Inbound rule for OpenSSH SSH Server (sshd)
+#    group: OpenSSH Server
+#    localport: 22
+#    action: allow
+#    direction: in
+#    protocol: tcp
+#    profiles:
+#      - domain
+#      - private
+#      - public

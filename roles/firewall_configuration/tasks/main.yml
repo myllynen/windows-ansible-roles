@@ -1,0 +1,66 @@
+---
+- name: Disable firewall profiles
+  ansible.windows.win_firewall:
+    state: disabled
+    profiles: "{{ item.profiles | default(omit) }}"
+    inbound_action: "{{ item.inbound_action | default(omit) }}"
+    outbound_action: "{{ item.outbound_action | default(omit) }}"
+  loop: "{{ firewall_profiles_disable | select }}"
+  loop_control:
+    label: "{{ item.profiles | default(item) }}"
+  when: item not in firewall_profiles_enable | select
+
+- name: Enable firewall profiles
+  ansible.windows.win_firewall:
+    state: enabled
+    profiles: "{{ item.profiles | default(omit) }}"
+    inbound_action: "{{ item.inbound_action | default(omit) }}"
+    outbound_action: "{{ item.outbound_action | default(omit) }}"
+  loop_control:
+    label: "{{ item.profiles | default(item) }}"
+  loop: "{{ firewall_profiles_enable | select }}"
+
+- name: Disable firewall rules
+  community.windows.win_firewall_rule:
+    state: "{{ item.state | default('present') }}"
+    name: "{{ item.name | default(omit) }}"
+    enabled: false
+    description: "{{ item.description | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    localip: "{{ item.localip | default(omit) }}"
+    localport: "{{ item.localport | default(omit) }}"
+    remoteip: "{{ item.remoteip | default(omit) }}"
+    remoteport: "{{ item.remoteport | default(omit) }}"
+    program: "{{ item.program | default(omit) }}"
+    service: "{{ item.service | default(omit) }}"
+    action: "{{ item.action | default(omit) }}"
+    direction: "{{ item.direction | default(omit) }}"
+    protocol: "{{ item.protocol | default(omit) }}"
+    profiles: "{{ item.profiles | default(omit) }}"
+    icmp_type_code: "{{ item.icmp_type_code | default(omit) }}"
+  loop: "{{ firewall_rules_disable | select }}"
+  loop_control:
+    label: "{{ item.name | default(item) }}"
+  when: item not in firewall_rules_enable
+
+- name: Enable firewall rules
+  community.windows.win_firewall_rule:
+    state: present
+    name: "{{ item.name | default(omit) }}"
+    enabled: true
+    description: "{{ item.description | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    localip: "{{ item.localip | default(omit) }}"
+    localport: "{{ item.localport | default(omit) }}"
+    remoteip: "{{ item.remoteip | default(omit) }}"
+    remoteport: "{{ item.remoteport | default(omit) }}"
+    program: "{{ item.program | default(omit) }}"
+    service: "{{ item.service | default(omit) }}"
+    action: "{{ item.action | default(omit) }}"
+    direction: "{{ item.direction | default(omit) }}"
+    protocol: "{{ item.protocol | default(omit) }}"
+    profiles: "{{ item.profiles | default(omit) }}"
+    icmp_type_code: "{{ item.icmp_type_code | default(omit) }}"
+  loop: "{{ firewall_rules_enable | select }}"
+  loop_control:
+    label: "{{ item.name | default(item) }}"
