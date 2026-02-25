@@ -10,7 +10,6 @@
     # Ansible WinRM configuration
     #
     #ansible_connection: winrm
-    #ansible_pipelining: true
     #ansible_winrm_port: 5985
     #ansible_winrm_scheme: http
     #ansible_winrm_transport: ntlm
@@ -24,7 +23,6 @@
     # Ansible psrp configuration
     #
     ansible_connection: psrp
-    ansible_pipelining: true
     ansible_psrp_port: 5985
     ansible_psrp_protocol: http
     ansible_psrp_auth: ntlm
@@ -126,6 +124,36 @@
     accounts_local_profiles_create:
     #  - username: testuser
     #    name: test-testuser
+
+    #
+    # audit_configuration
+    #
+    # List of system-wide audit policy settings to apply
+    # Uses ansible.windows.win_audit_policy_system module
+    audit_configuration_system_policies:
+    #  - category: Account Logon
+    #    audit_type:
+    #      - success
+    #      - failure
+    #  - subcategory: File System
+    #    audit_type:
+    #      - failure
+
+    # List of audit rules to remove
+    # Uses ansible.windows.win_audit_rule module
+    audit_configuration_rules_remove:
+    #  - path: C:\Windows\Temp
+    #    user: BUILTIN\Users
+
+    # List of audit rules to create
+    # Uses ansible.windows.win_audit_rule module
+    audit_configuration_rules_create:
+    #  - path: HKLM:\Software
+    #    user: BUILTIN\Users
+    #    rights:
+    #      - delete
+    #    audit_flags:
+    #      - success
 
     #
     # boot_configuration
@@ -240,6 +268,28 @@
     dsc_settings_reboot: true
 
     #
+    # dsc3_settings
+    #
+    # DSC3 settings to apply with ansible.windows.dsc3
+    # Each setting requires: setting and config or config_file
+    # Optional: parameters, trace_level, remote_config_file,
+    #           reboot (true/false, defaults to false if omitted)
+    dsc3_settings:
+    #  - setting: Install .NET
+    #    config:
+    #      resources:
+    #        - name: Install .NET Framework
+    #          type: Microsoft.WinGet/Package
+    #          properties:
+    #            id: Microsoft.DotNet.Framework.DeveloperPack_4
+    #            source: winget
+    #    reboot: true
+
+    # Reboot after DSC3 changes
+    # Action depends on per-setting "reboot: true"
+    dsc3_settings_reboot: true
+
+    #
     # environment_settings
     #
     # Path environment settings to configure
@@ -326,6 +376,54 @@
     # files_{acl,copy,create,fetch,get,remove} - omitted here for brevity
 
     #
+    # firewall_configuration
+    #
+    # List of firewall profiles to disable
+    # Uses ansible.windows.win_firewall module
+    firewall_profiles_disable:
+    #  - profiles:
+    #      - trusted
+
+    # List of firewall profiles to enable
+    # Uses ansible.windows.win_firewall module
+    firewall_profiles_enable:
+    #  - profiles:
+    #      - domain
+    #      - private
+    #      - public
+
+    # List of firewall rules to disable
+    # Uses community.windows.win_firewall_rule module
+    firewall_rules_disable:
+    #  - name: Remote Desktop - User Mode (TCP-In)
+    #    description: >-
+    #      Inbound rule for the Remote Desktop service to allow RDP traffic. [TCP 3389]
+    #    group: '@FirewallAPI.dll,-28752'
+    #    localport: 3389
+    #    action: allow
+    #    direction: in
+    #    protocol: tcp
+    #    profiles:
+    #      - domain
+    #      - private
+    #      - public
+
+    # List of firewall rules to enable
+    # Uses community.windows.win_firewall_rule module
+    firewall_rules_enable:
+    #  - name: OpenSSH SSH Server (sshd)
+    #    description: Inbound rule for OpenSSH SSH Server (sshd)
+    #    group: OpenSSH Server
+    #    localport: 22
+    #    action: allow
+    #    direction: in
+    #    protocol: tcp
+    #    profiles:
+    #      - domain
+    #      - private
+    #      - public
+
+    #
     # network_configuration
     #
     # Enable or disable IPv6
@@ -394,16 +492,16 @@
     packages_chocolater_update_packages: true
     packages_chocolatey_remove_deps: false
 
+    # Chocolatey packages to remove
+    packages_chocolatey_remove:
+    #  - emacs
+
     # Chocolatey packages to install
     packages_chocolatey_install:
     #  - git
     #  - less
     #  - nano
     #  - vim
-
-    # Chocolatey packages to remove
-    packages_chocolatey_remove:
-    #  - emacs
 
     #
     # performance_tuning
@@ -489,25 +587,51 @@
     registry_settings_reboot: true
 
     #
-    # services_enablement
+    # service_management
     #
-    service_enablement_disable:
-      - WbioSrvc
+    # Skip missing services to avoid errors
+    service_management_ignore_missing: true
 
-    service_enablement_enable:
+    # List of services to remove/disable/stop/pause
+    # Required: name and either state or start_mode
+    # Uses ansible.windows.win_service module
+    service_management_disable:
+    #  - name: dev service
+    #    state: absent
+    #  - name: WSearch
+    #    start_mode: disabled
+    #    state: stopped
+    #  - name: WbioSrvc
+    #    start_mode: disabled
+    #    state: stopped
 
-    #
-    # service_recovery_options
-    #
-    service_recovery_options:
-      - name: SNMPTRAP
-        actions:
-          - delay_ms: 30000
-            type: restart
-          - delay_ms: 30000
-            type: restart
-          - delay_ms: 60000
-            type: reboot
+    # List of services to create/configure/enable/start/restart
+    # Required: name and at least either state or start_mode
+    # Optional: ansible.windows.win_service parameters and
+    # restart_configured to restart after config changes
+    # Uses ansible.windows.win_service module
+    service_management_enable:
+    #  - name: new test service
+    #    start_mode: manual
+    #    state: stopped
+    #    path: C:\Temp\test.exe
+    #  - name: sshd
+    #    start_mode: auto
+    #    state: started
+    #  - name: wuauserv
+    #    start_mode: auto
+    #    state: started
+    #  - name: SNMPTrap
+    #    failure_actions:
+    #      - delay_ms: 10000
+    #        type: restart
+    #      - delay_ms: 20000
+    #        type: restart
+    #      - delay_ms: 30000
+    #        type: reboot
+    #    failure_reboot_msg: Rebooting after SNMPTrap service failure
+    #    failure_reset_period_sec: '0xFFFFFFFF'
+    #    restart_configured: true
 
     #
     # sshd_configuration
@@ -545,7 +669,7 @@
       - private
       - public
 
-    # Enable sshd_config validatiion using a copy if
+    # Enable sshd_config validation using a copy if
     # the file is about to be updated. Recommended.
     # NB. Works only after sshd has been started once
     # NB. The temp copy will be updated in check mode
@@ -563,7 +687,7 @@
     # and additionally also enables GSSAPI authentication.
     sshd_configuration_options:
     #  AuthorizedKeysFile: .ssh/authorized_keys
-    #  GSSAPIAuthentication yes
+    #  GSSAPIAuthentication: "yes"
     #  Subsystem: sftp sftp-server.exe
     #  AllowGroups: administrators "openssh users"
     #  Match Group administrators:
@@ -685,6 +809,29 @@
     # the following description were part of the
     # installed updates. Use '.*' for everything.
     system_update_compile_filter: Cumulative Update
+
+    #
+    # task_scheduling
+    #
+    # List of scheduled tasks to remove
+    # Uses community.windows.win_scheduled_task module
+    task_scheduling_remove:
+    #  - Incorrect task
+    #  - Obsoleted task
+
+    # List of scheduled tasks to create/enable/disable
+    # Uses community.windows.win_scheduled_task module
+    task_scheduling_create:
+    #  - name: Report system info
+    #    description: Daily system info update
+    #    enabled: true
+    #    actions:
+    #      - path: cmd.exe
+    #        arguments: /c systeminfo.exe > \Windows\Temp\systeminfo.txt
+    #    triggers:
+    #      - type: daily
+    #        start_boundary: '00:00:00'
+    #    username: SYSTEM
 
     #
     # user_experience
@@ -823,6 +970,8 @@
     - system_locale
     - accounts_local
     - boot_configuration
+    - audit_configuration
+    - firewall_configuration
     - network_configuration
     - winrm_configuration
     - sshd_configuration
@@ -830,12 +979,13 @@
     #- wsl_configuration
     #- windows_recovery
     - dsc_settings
+    - dsc3_settings
     - registry_settings
     - environment_settings
     #- packages_chocolatey
     - performance_tuning
-    #- service_enablement
-    #- service_recovery
+    - service_management
+    - task_scheduling
     - user_experience
     - user_settings
     #- system_reboot
