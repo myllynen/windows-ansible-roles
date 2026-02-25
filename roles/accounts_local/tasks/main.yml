@@ -2,9 +2,9 @@
 - name: Check connecting user
   vars:
     win_conn_user: "{{ 'ansible_' + ansible_connection + '_user' }}"
-    win_remote_user: "{{ vars[win_conn_user] | default(ansible_user) }}"
+    win_remote_user: "{{ lookup('vars', win_conn_user, default='') | default(ansible_user, true) }}"
   ansible.builtin.set_fact:
-    win_ansible_user: "{{ win_remote_user | default(lookup('env', 'USER')) }}"
+    win_ansible_user: "{{ win_remote_user | default(lookup('env', 'USER'), true) }}"
 
 - name: Fail if Administrator trying to disable self
   ansible.builtin.fail:
@@ -49,18 +49,42 @@
     state: absent
     remove_multiple: true
   loop: "{{ accounts_local_profiles_delete | select }}"
+  when:
+    - item | lower not in accounts_local_reserved_names
+    - item not in accounts_local_users_create | map(attribute='name')
 
 - name: Delete local user
   ansible.windows.win_user:
     name: "{{ item }}"
     state: absent
   loop: "{{ accounts_local_users_delete | select }}"
+  when:
+    - item | lower not in accounts_local_reserved_names
+    - item not in accounts_local_users_create | map(attribute='name')
 
 - name: Delete local group
   ansible.windows.win_group:
     name: "{{ item }}"
     state: absent
   loop: "{{ accounts_local_groups_delete | select }}"
+  when:
+    - item | lower not in accounts_local_reserved_names
+    - item not in accounts_local_groups_create | map(attribute='name')
+
+# https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-shell-setup-useraccounts-localaccounts-localaccount-name
+- name: Verify local group names
+  ansible.builtin.assert:
+    that:
+      - item.name | length >= 1
+      - item.name | length <= 256
+      - item.name not in ['.', '..']
+      - item.name | lower not in accounts_local_reserved_names
+      - item.name is not search('[/\\\[\]:|<>+=;,?*%@]')
+    quiet: true
+    fail_msg: "{{ item.name }} is not acceptable group name."
+  loop: "{{ accounts_local_groups_create | select }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Create local group
   ansible.windows.win_group:
@@ -77,6 +101,21 @@
   ansible.builtin.set_fact:
     create_users: "{{ create_users | default([]) + [item | dict2items | rejectattr('key', 'equalto', 'password') | items2dict] }}"
   loop: "{{ accounts_local_users_create | select }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+# https://learn.microsoft.com/en-us/windows-hardware/customize/desktop/unattend/microsoft-windows-shell-setup-useraccounts-localaccounts-localaccount-name
+- name: Verify local user names
+  ansible.builtin.assert:
+    that:
+      - item.name | length >= 1
+      - item.name | length <= 256
+      - item.name not in ['.', '..']
+      - item.name | lower not in accounts_local_reserved_names
+      - item.name is not search('[/\\\[\]:|<>+=;,?*%@]')
+    quiet: true
+    fail_msg: "{{ item.name }} is not acceptable user name."
+  loop: "{{ create_users | default([]) | select }}"
   loop_control:
     label: "{{ item.name }}"
 
@@ -105,7 +144,7 @@
   ansible.windows.win_user:
     name: "{{ item.name }}"
     password: "{{ item.password }}"
-  loop: "{{ accounts_local_users_create | select | selectattr('password', 'defined') }}"
+  loop: "{{ accounts_local_users_create | selectattr('password', 'defined') }}"
   loop_control:
     label: "{{ item.name }}"
 
