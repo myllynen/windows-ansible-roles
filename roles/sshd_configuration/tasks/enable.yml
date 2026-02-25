@@ -2,9 +2,9 @@
 - name: Check connecting user
   vars:
     win_conn_user: "{{ 'ansible_' + ansible_connection + '_user' }}"
-    win_remote_user: "{{ vars[win_conn_user] | default(ansible_user) }}"
+    win_remote_user: "{{ lookup('vars', win_conn_user, default='') | default(ansible_user, true) }}"
   ansible.builtin.set_fact:
-    win_become_user: "{{ ansible_become_user | default(win_remote_user) | default(lookup('env', 'USER')) }}"
+    win_become_user: "{{ ansible_become_user | default(win_remote_user, true) | default(lookup('env', 'USER'), true) }}"
   when: sshd_configuration_install | bool
 
 - name: Install OpenSSH.Server capability
@@ -34,7 +34,10 @@
     name: DefaultShell
     type: String
     data: "{{ sshd_configuration_shell }}"
-  when: sshd_configuration_shell is string
+  when:
+    - sshd_configuration_shell is string
+    - sshd_configuration_shell.startswith('C:\\Windows\\System32\\')
+    - sshd_configuration_shell.endswith('.exe')
 
 - name: Create sshd configuration directory
   ansible.windows.win_file:
@@ -64,8 +67,8 @@
 - name: Configure administrators SSH key file
   vars:
     keys: "{{ sshd_configuration_admins_keys }}"
-    keys_del: "{{ ['absent'] | product(keys.absent | default([], true)) }}"
-    keys_add: "{{ ['present'] | product(keys.present | default([], true)) }}"
+    keys_del: "{{ ['absent'] | product(keys.absent | select) }}"
+    keys_add: "{{ ['present'] | product(keys.present | select) }}"
   community.windows.win_lineinfile:
     path: C:\ProgramData\ssh\administrators_authorized_keys
     line: "{{ item.1 }}"
@@ -126,8 +129,8 @@
 - name: Enable sshd service
   ansible.windows.win_service:
     name: sshd
-    state: started
     start_mode: "{{ sshd_configuration_start_mode }}"
+    state: started
   register: service_start
 
 - name: Allow firewall SSH port
@@ -145,7 +148,6 @@
   ansible.windows.win_service:
     name: sshd
     state: restarted
-    start_mode: auto
   when:
     - service_start is not changed
     - sshd_config_template is changed or

@@ -12,8 +12,8 @@
 - name: Disable sshd service
   ansible.windows.win_service:
     name: sshd
-    state: stopped
     start_mode: disabled
+    state: stopped
   when: sshd_service.exists
 
 - name: Block firewall SSH port

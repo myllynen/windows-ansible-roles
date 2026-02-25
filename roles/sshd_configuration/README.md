@@ -42,7 +42,7 @@ sshd_configuration_firewall_profiles:
   - domain
   - private
 
-# Enable sshd_config validatiion using a copy if
+# Enable sshd_config validation using a copy if
 # the file is about to be updated. Recommended.
 # NB. Works only after sshd has been started once
 # NB. The temp copy will be updated in check mode
@@ -60,7 +60,7 @@ sshd_configuration_config_file:
 # and additionally also enables GSSAPI authentication.
 sshd_configuration_options:
 #  AuthorizedKeysFile: .ssh/authorized_keys
-#  GSSAPIAuthentication yes
+#  GSSAPIAuthentication: "yes"
 #  Subsystem: sftp sftp-server.exe
 #  AllowGroups: administrators "openssh users"
 #  Match Group administrators:
