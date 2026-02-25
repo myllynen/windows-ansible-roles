@@ -2,9 +2,9 @@
 - name: Check connecting user
   vars:
     win_conn_user: "{{ 'ansible_' + ansible_connection + '_user' }}"
-    win_remote_user: "{{ vars[win_conn_user] | default(ansible_user) }}"
+    win_remote_user: "{{ lookup('vars', win_conn_user, default='') | default(ansible_user, true) }}"
   ansible.builtin.set_fact:
-    win_ansible_user: "{{ win_remote_user | default(lookup('env', 'USER')) }}"
+    win_ansible_user: "{{ win_remote_user | default(lookup('env', 'USER'), true) }}"
 
 - name: Get list of user profiles
   check_mode: false
@@ -57,7 +57,7 @@
     - user_settings_apply_to_logged_in_users | bool or
       'used by another process' not in user_update.msg
   ignore_errors: "{{ user_settings_apply_to_logged_in_users | bool }}"
-  loop: "{{ user_profiles.result | product(user_settings_registry | default([], true)) }}"
+  loop: "{{ user_profiles.result | product(user_settings_registry | select) }}"
   loop_control:
     label: "{{ item[0].UserName }} - {{ item[1].setting }}"
   when:
@@ -75,7 +75,7 @@
     type: "{{ item[1].type | default(omit) }}"
     data: "{{ item[1].data | default(omit) }}"
     state: "{{ item[1].state | default(omit) }}"
-  loop: "{{ failed_users | product(user_settings_registry | default([], true)) }}"
+  loop: "{{ failed_users | product(user_settings_registry | select) }}"
   loop_control:
     label: "{{ item[0].UserName }} - {{ item[1].setting }}"
   when:

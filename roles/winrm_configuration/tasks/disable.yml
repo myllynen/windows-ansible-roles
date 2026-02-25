@@ -13,8 +13,8 @@
 - name: Disable WinRM service
   ansible.windows.win_service:
     name: WinRM
-    state: stopped
     start_mode: disabled
+    state: stopped
   when: winrm_service.exists
 
 - name: Block firewall WinRM HTTP port

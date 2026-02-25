@@ -30,8 +30,8 @@
 - name: Enable WinRM service
   ansible.windows.win_service:
     name: WinRM
-    state: started
     start_mode: "{{ winrm_configuration_start_mode }}"
+    state: started
 
 - name: Enable WinRM service HTTPS listener
   check_mode: false

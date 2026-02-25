@@ -1,5 +1,5 @@
 ---
-- name: Clean old Windows Update files
+- name: Clean Windows Update files
   vars:
     reset_base: "{{ '/ResetBase' if disk_cleanup_windows_update_reset | bool else '' }}"
   ansible.windows.win_command: Dism.exe /Online /Quiet /Cleanup-Image /StartComponentCleanup {{ reset_base }}
