@@ -1,0 +1,37 @@
+---
+- name: Configure system-wide audit policies
+  ansible.windows.win_audit_policy_system:
+    audit_type: "{{ item.audit_type }}"
+    category: "{{ item.category | default(omit) }}"
+    subcategory: "{{ item.subcategory | default(omit) }}"
+  loop: "{{ audit_configuration_system_policies | select }}"
+  loop_control:
+    label: "{{ item.category | default(item.subcategory) }}"
+
+- name: Remove audit rules
+  ansible.windows.win_audit_rule:
+    path: "{{ item.path }}"
+    user: "{{ item.user }}"
+    state: absent
+  register: removed_audit_rules
+  loop: "{{ audit_configuration_rules_remove | select }}"
+  loop_control:
+    label: "{{ item.user + ' -> ' + item.path }}"
+  when: audit_configuration_rules_create
+        | selectattr('path', 'equalto', item.path)
+        | selectattr('user', 'equalto', item.user)
+        | length == 0
+
+- name: Create audit rules
+  ansible.windows.win_audit_rule:
+    path: "{{ item.path }}"
+    user: "{{ item.user }}"
+    rights: "{{ item.rights | default(omit) }}"
+    audit_flags: "{{ item.audit_flags | default(omit) }}"
+    inheritance_flags: "{{ item.inheritance_flags | default(omit) }}"
+    propagation_flags: "{{ item.propagation_flags | default(omit) }}"
+    state: present
+  register: created_audit_rules
+  loop: "{{ audit_configuration_rules_create | select }}"
+  loop_control:
+    label: "{{ item.user + ' -> ' + item.path }}"
