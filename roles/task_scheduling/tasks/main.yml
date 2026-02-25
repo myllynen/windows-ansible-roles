@@ -1,0 +1,93 @@
+---
+- name: Remove scheduled tasks
+  community.windows.win_scheduled_task:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ task_scheduling_remove | select }}"
+  when: item not in task_scheduling_create | map(attribute='name')
+
+- name: Configure scheduled tasks - disabled
+  community.windows.win_scheduled_task:
+    name: "{{ item }}"
+    enabled: false
+    date: "{{ item.date | default(omit) }}"
+    author: "{{ item.author | default(omit) }}"
+    version: "{{ item.version | default(omit) }}"
+    description: "{{ item.description | default(omit) }}"
+    display_name: "{{ item.display_name | default(omit) }}"
+    path: "{{ item.path | default(omit) }}"
+    source: "{{ item.source | default(omit) }}"
+    actions: "{{ item.actions | default(omit) }}"
+    triggers: "{{ item.triggers | default(omit) }}"
+    allow_demand_start: "{{ item.allow_demand_start | default(omit) }}"
+    allow_hard_terminate: "{{ item.allow_hard_terminate | default(omit) }}"
+    compatibility: "{{ item.compatibility | default(omit) }}"
+    delete_expired_task_after: "{{ item.delete_expired_task_after | default(omit) }}"
+    disallow_start_if_on_batteries: "{{ item.disallow_start_if_on_batteries | default(omit) }}"
+    stop_if_going_on_batteries: "{{ item.stop_if_going_on_batteries | default(omit) }}"
+    execution_time_limit: "{{ item.execution_time_limit | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    username: "{{ item.username | default(omit) }}"
+    password: "{{ item.password | default(omit) }}"
+    update_password: "{{ item.update_password | default(omit) }}"
+    hidden: "{{ item.hidden | default(omit) }}"
+    logon_type: "{{ item.logon_type | default(omit) }}"
+    multiple_instances: "{{ item.multiple_instances | default(omit) }}"
+    priority: "{{ item.priority | default(omit) }}"
+    restart_count: "{{ item.restart_count | default(omit) }}"
+    restart_interval: "{{ item.restart_interval | default(omit) }}"
+    run_level: "{{ item.run_level | default(omit) }}"
+    run_only_if_idle: "{{ item.run_only_if_idle | default(omit) }}"
+    run_only_if_network_available: "{{ item.run_only_if_network_available | default(omit) }}"
+    start_when_available: "{{ item.start_when_available | default(omit) }}"
+    wake_to_run: "{{ item.wake_to_run | default(omit) }}"
+    state: present
+  loop: "{{ task_scheduling_create
+            | selectattr('enabled', 'defined')
+            | selectattr('enabled', 'equalto', false) }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configure scheduled tasks - enabled
+  community.windows.win_scheduled_task:
+    name: "{{ item }}"
+    enabled: true
+    date: "{{ item.date | default(omit) }}"
+    author: "{{ item.author | default(omit) }}"
+    version: "{{ item.version | default(omit) }}"
+    description: "{{ item.description | default(omit) }}"
+    display_name: "{{ item.display_name | default(omit) }}"
+    path: "{{ item.path | default(omit) }}"
+    source: "{{ item.source | default(omit) }}"
+    actions: "{{ item.actions | default(omit) }}"
+    triggers: "{{ item.triggers | default(omit) }}"
+    allow_demand_start: "{{ item.allow_demand_start | default(omit) }}"
+    allow_hard_terminate: "{{ item.allow_hard_terminate | default(omit) }}"
+    compatibility: "{{ item.compatibility | default(omit) }}"
+    delete_expired_task_after: "{{ item.delete_expired_task_after | default(omit) }}"
+    disallow_start_if_on_batteries: "{{ item.disallow_start_if_on_batteries | default(omit) }}"
+    stop_if_going_on_batteries: "{{ item.stop_if_going_on_batteries | default(omit) }}"
+    execution_time_limit: "{{ item.execution_time_limit | default(omit) }}"
+    group: "{{ item.group | default(omit) }}"
+    username: "{{ item.username | default(omit) }}"
+    password: "{{ item.password | default(omit) }}"
+    update_password: "{{ item.update_password | default(omit) }}"
+    hidden: "{{ item.hidden | default(omit) }}"
+    logon_type: "{{ item.logon_type | default(omit) }}"
+    multiple_instances: "{{ item.multiple_instances | default(omit) }}"
+    priority: "{{ item.priority | default(omit) }}"
+    restart_count: "{{ item.restart_count | default(omit) }}"
+    restart_interval: "{{ item.restart_interval | default(omit) }}"
+    run_level: "{{ item.run_level | default(omit) }}"
+    run_only_if_idle: "{{ item.run_only_if_idle | default(omit) }}"
+    run_only_if_network_available: "{{ item.run_only_if_network_available | default(omit) }}"
+    start_when_available: "{{ item.start_when_available | default(omit) }}"
+    wake_to_run: "{{ item.wake_to_run | default(omit) }}"
+    state: present
+  loop: "{{ (task_scheduling_create
+            | selectattr('enabled', 'undefined'))
+            + (task_scheduling_create
+              | selectattr('enabled', 'defined')
+              | rejectattr('enabled', 'equalto', false)) }}"
+  loop_control:
+    label: "{{ item.name }}"
