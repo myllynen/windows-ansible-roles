@@ -14,6 +14,11 @@
     user: "{{ item.user }}"
     state: absent
   register: removed_audit_rules
+  failed_when:
+    - removed_audit_rules.msg is defined
+    - not audit_configuration_ignore_missing | bool or
+      ('not found/invalid' not in removed_audit_rules.msg and
+       'lookup the identity' not in removed_audit_rules.msg)
   loop: "{{ audit_configuration_rules_remove | select }}"
   loop_control:
     label: "{{ item.user + ' -> ' + item.path }}"

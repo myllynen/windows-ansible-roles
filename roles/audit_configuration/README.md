@@ -21,6 +21,9 @@ audit_configuration_system_policies:
 #    audit_type:
 #      - failure
 
+# Ignore missing rules on remove to avoid errors
+audit_configuration_ignore_missing: false
+
 # List of audit rules to remove
 # Uses ansible.windows.win_audit_rule module
 audit_configuration_rules_remove:
