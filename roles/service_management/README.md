@@ -10,8 +10,8 @@ Below are the role default values from defaults/main.yml:
 
 <pre>
 ---
-# Skip missing services to avoid errors
-service_management_ignore_missing: true
+# Ignore missing services to avoid errors
+service_management_ignore_missing: false
 
 # List of services to remove/disable/stop/pause
 # Required: name and either state or start_mode
