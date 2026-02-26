@@ -8,7 +8,7 @@
 
 - name: Configure scheduled tasks - disabled
   community.windows.win_scheduled_task:
-    name: "{{ item }}"
+    name: "{{ item.name }}"
     enabled: false
     date: "{{ item.date | default(omit) }}"
     author: "{{ item.author | default(omit) }}"
@@ -50,7 +50,7 @@
 
 - name: Configure scheduled tasks - enabled
   community.windows.win_scheduled_task:
-    name: "{{ item }}"
+    name: "{{ item.name }}"
     enabled: true
     date: "{{ item.date | default(omit) }}"
     author: "{{ item.author | default(omit) }}"
