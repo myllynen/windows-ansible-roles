@@ -79,3 +79,24 @@
     script: |
       powercfg.exe /setactive {{ wanted_guid }}
   when: current_guid != wanted_guid
+
+- name: Configure hibernation
+  check_mode: false
+  ansible.windows.win_powershell:
+    error_action: stop
+    script: |
+      $Ansible.Changed = $false
+      $setting = {{ hibernation | bool | int }}
+      $current = (Get-ItemProperty HKLM:\SYSTEM\CurrentControlSet\Control\Power).HibernateEnabled
+      if ($setting -ne $current) {
+        $Ansible.Changed = $true
+        if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
+        try {
+          $result = powercfg.exe /H {{ 'ON' if hibernation else 'OFF' }} 2>&1
+        }
+        catch {
+          $Ansible.Result = $_.Exception.Message
+          $Ansible.Failed = $true
+          Exit 1
+        }
+      }

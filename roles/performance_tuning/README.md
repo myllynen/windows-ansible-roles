@@ -29,6 +29,9 @@ page_file_reboot: true
 # power_saver       - max energy savings at the cost of performance
 # high_performance  - maximum performance with higher energy use
 power_scheme: balanced
+
+# Hibernation enabled or disabled
+hibernation: false
 </pre>
 
 ## License
