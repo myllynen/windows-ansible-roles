@@ -27,7 +27,7 @@ service_management_disable:
 #    state: stopped
 
 # List of services to create/configure/enable/start/restart
-# Required: name and at least either state or start_mode
+# Required: name and state, start_mode, or parameters to configure
 # Optional: ansible.windows.win_service parameters and
 # restart_configured to restart after config changes
 # Uses ansible.windows.win_service module

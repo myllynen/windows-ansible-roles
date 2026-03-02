@@ -529,6 +529,9 @@
     # high_performance  - maximum performance with higher energy use
     power_scheme: high_performance
 
+    # Hibernation enabled or disabled
+    hibernation: false
+
     #
     # rdp_configuration
     #
@@ -609,7 +612,7 @@
     #    state: stopped
 
     # List of services to create/configure/enable/start/restart
-    # Required: name and at least either state or start_mode
+    # Required: name and state, start_mode, or parameters to configure
     # Optional: ansible.windows.win_service parameters and
     # restart_configured to restart after config changes
     # Uses ansible.windows.win_service module

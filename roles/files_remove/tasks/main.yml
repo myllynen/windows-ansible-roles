@@ -2,8 +2,8 @@
 - name: Fail if unsafe wildcard in use
   ansible.builtin.fail:
     msg: "Refusing to expand unsafe wildcard '*'."
-  when: "'*' in files_remove | default([], true) or
-         'C:\\*' in files_remove | default([], true)"
+  when: "'*' in files_remove | select or
+         'C:\\*' in files_remove | select"
 
 - name: Fail if incorrect path format in use
   ansible.builtin.fail:
@@ -53,5 +53,5 @@
     path: "{{ item }}"
     state: absent
   register: remove_files
-  loop: "{{ (plain_paths + wildcard_paths) | select }}"
-  when: item not in files_remove_exclude | default([], true)
+  loop: "{{ plain_paths + wildcard_paths }}"
+  when: item not in files_remove_exclude | select
