@@ -1,4 +1,10 @@
 ---
+# Remove results from possible previous role execution
+- name: Initialize list of all applied updates
+  ansible.builtin.set_fact:
+    update_combined: {'updates': {}}
+    update_install: null
+
 - name: Include tasks to install updates
   ansible.builtin.include_tasks:
     file: update.yml
@@ -15,7 +21,7 @@
       filtered_updates: "{{ update_install.filtered_updates }}"
       found_update_count: "{{ update_install.found_update_count }}"
       installed_update_count: "{{ update_combined.updates | length }}"
-      reboot_required: "{{ update_install.reboot_required }}"
+      reboot_required: "{{ update_install.reboot_required | default(true) }}"
       rebooted: "{{ system_update_rebooted | default(false) }}"
       updates: "{{ update_combined.updates }}"
 

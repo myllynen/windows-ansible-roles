@@ -1,27 +1,32 @@
 ---
 # Retry attempts and delay between retries
 # for applying updates in case of failures
-system_update_retry_count: 1
-system_update_retry_delay: 30
+system_update_retry_count: 3
+system_update_retry_delay: 300
 
 # Retry applying updates also if updates were
 # installed, subject to the above retry count
 system_update_retry_after_install: true
 
-# Parameters for win_updates
+# Parameters for ansible.windows.win_updates module
 system_update_categories: '*'
 system_update_accept_list: []
 system_update_reject_list: []
-system_update_skip_optional: true
+system_update_skip_optional: false
 system_update_state: installed
+
+# Use scheduled background task or become SYSTEM
+# The module default is to use a scheduled task
+system_update_background_task: true
 
 # Display update results, full or compact
 system_update_display_results: true
-system_update_display_results_full: true
+system_update_display_results_full: false
 
-# Reboot if needed after updates
+# Reboot after updates, if needed or always
 system_update_reboot: true
-system_update_reboot_timeout: 1200
+system_update_reboot_always: false
+system_update_reboot_timeout: 1800
 
 # Compile all installed assemblies
 # This will happen only after updates
@@ -30,4 +35,4 @@ system_update_compile_assemblies: true
 # Trigger compilation only when updates with
 # the following description were part of the
 # installed updates. Use '.*' for everything.
-system_update_compile_filter: Cumulative Update
+system_update_compile_filter: '(Cumulative Update|NET Framework)'

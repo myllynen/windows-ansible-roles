@@ -3,6 +3,9 @@
   vars:
     ansible_winrm_read_timeout_sec: "{{ system_update_reboot_timeout | int + 10 }}"
     ansible_winrm_operation_timeout_sec: "{{ system_update_reboot_timeout | int + 5 }}"
+  become: "{{ not system_update_background_task | bool }}"
+  become_method: ansible.builtin.runas
+  become_user: SYSTEM
   ansible.windows.win_updates:
     category_names: "{{ system_update_categories }}"
     accept_list: "{{ system_update_accept_list | default(omit, true) }}"
@@ -13,7 +16,7 @@
   register: update_result
   ignore_errors: true
   when: >
-    update_install is not defined or
+    update_install is none or
     update_install is failed or
     (update_install is changed and
      system_update_retry_after_install | bool)
@@ -21,21 +24,27 @@
 - name: Record update installation result
   ansible.builtin.set_fact:
     update_install: "{{ update_result }}"
-    update_combined: "{{ update_combined | default({'updates': {}}) |
+    update_combined: "{{ update_combined |
                          combine({'updates': update_result.updates}, recursive=true) }}"
   when: update_result is not skipped
 
 - name: Reboot system
   ansible.windows.win_reboot:
     reboot_timeout: "{{ system_update_reboot_timeout | float }}"
+    post_reboot_delay: 10.0
     msg: "Ansible reboot after installing updates"
   register: reboot_status
   when:
-    - system_update_reboot | bool
     - update_result is not skipped
-    - update_install.reboot_required or
-      (update_install is failed and
-       update_attempt < system_update_retry_count | int)
+    - (system_update_reboot_always | bool and
+       (update_install.reboot_required is not defined or
+        update_install is failed or
+        update_install is changed)) or
+      (system_update_reboot | bool and
+       (update_install.reboot_required is not defined or
+        update_install.reboot_required or
+        (update_install is failed and
+         update_attempt < system_update_retry_count | int)))
 
 - name: Record reboot status
   ansible.builtin.set_fact:
