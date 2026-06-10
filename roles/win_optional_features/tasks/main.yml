@@ -1,0 +1,51 @@
+---
+- name: Remove unwanted Windows optional features
+  vars:
+    optional_feature_removals: "{{ win_optional_features_remove | select }}"
+    optional_feature_installs: "{{ win_optional_features_install | select('string') +
+                                   win_optional_features_install | map(attribute='name', default='') | select }}"
+  ansible.windows.win_optional_feature:
+    name: "{{ item }}"
+    state: absent
+  register: removed_optional_features
+  failed_when:
+    - removed_optional_features.msg is defined
+    - not win_optional_features_remove_ignore_unknown | bool or
+      'Failed to find' not in removed_optional_features.msg
+  loop: "{{ optional_feature_removals | reject('in', optional_feature_installs) }}"
+
+- name: Reboot system
+  vars:
+    reboot_needed: "{{ removed_optional_features.results
+                       | selectattr('reboot_required', 'defined')
+                       | selectattr('reboot_required', 'equalto', true) | length > 0 }}"
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after removing optional features"
+  when:
+    - win_optional_features_reboot | bool
+    - removed_optional_features is changed
+    - reboot_needed
+
+- name: Install wanted Windows optional features
+  ansible.windows.win_optional_feature:
+    name: "{{ item if item is string else item.name }}"
+    source: "{{ item.source | default(omit) }}"
+    include_parent: "{{ item.include_parent | default(omit) }}"
+    state: present
+  register: installed_optional_features
+  loop: "{{ win_optional_features_install | select }}"
+  loop_control:
+    label: "{{ item if item is string else item.name }}"
+
+- name: Reboot system
+  vars:
+    reboot_needed: "{{ installed_optional_features.results
+                       | selectattr('reboot_required', 'equalto', true) | length > 0 }}"
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after installing optional features"
+  when:
+    - win_optional_features_reboot | bool
+    - installed_optional_features is changed
+    - reboot_needed
