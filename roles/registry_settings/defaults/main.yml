@@ -16,11 +16,17 @@ registry_settings:
 #    data: 1
 #    reboot: true
 #
+#  - setting: Set Windows Crash Dump level
+#    path: HKLM:\SYSTEM\CurrentControlSet\Control\CrashControl
+#    name: CrashDumpEnabled
+#    type: DWord
+#    data: 3
+#
 #  - setting: Set WER local crash dump folder
 #    path: HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps
 #    name: DumpFolder
 #    type: ExpandString
-#    data: '%LOCALAPPDATA%\CrashDumps'
+#    data: 'C:\CrashDumps'
 #
 #  - setting: Set WER local crash dump count
 #    path: HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps

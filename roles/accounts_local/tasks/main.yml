@@ -120,6 +120,7 @@
     label: "{{ item.name }}"
 
 - name: Create local user
+  # noqa: no-log-password
   ansible.windows.win_user:
     name: "{{ item.name }}"
     state: present

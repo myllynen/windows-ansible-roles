@@ -5,7 +5,7 @@
     error_action: stop
     script: |
       $Ansible.Changed = $false
-      $Ansible.Result = @((Get-Service | % { $_.Name.ToLower() }))
+      $Ansible.Result = @((Get-Service | ForEach-Object { $_.Name.ToLower() }))
   register: initial_services
 
 - name: Pause service
@@ -66,6 +66,7 @@
   when: item.name not in service_management_enable | select | map(attribute='name')
 
 - name: Create service
+  no_log: "{{ true if item.password is defined else false }}"
   ansible.windows.win_service:
     name: "{{ item.name }}"
     path: "{{ item.path }}"
@@ -104,10 +105,11 @@
     error_action: stop
     script: |
       $Ansible.Changed = $false
-      $Ansible.Result = @((Get-Service | % { $_.Name.ToLower() }))
+      $Ansible.Result = @((Get-Service | ForEach-Object { $_.Name.ToLower() }))
   register: current_services
 
 - name: Configure service
+  no_log: "{{ true if item.password is defined else false }}"
   ansible.windows.win_service:
     name: "{{ item.name }}"
     path: "{{ item.path | default(omit) }}"

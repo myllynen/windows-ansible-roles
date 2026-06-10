@@ -8,7 +8,7 @@
       # From https://docs.ansible.com/ansible/latest/os_guide/windows_performance.html
       $ngenPath = [System.IO.Path]::Combine([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory(), `
                                             'ngen.exe')
-      [AppDomain]::CurrentDomain.GetAssemblies() | % {
+      [AppDomain]::CurrentDomain.GetAssemblies() | ForEach-Object {
         if (-not $_.Location) { continue }
         $name = Split-Path -Path $_.Location -Leaf
         if ($name.StartsWith('Microsoft.PowerShell')) {

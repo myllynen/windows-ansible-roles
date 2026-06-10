@@ -28,6 +28,7 @@ winrm_configuration_service_config:
   IPv6Filter: '*'
 
 # Firewall profiles to apply rules
+# https://github.com/ansible-collections/community.windows/issues/19
 winrm_configuration_firewall_profiles:
   - domain
   - private

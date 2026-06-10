@@ -7,6 +7,7 @@
   when: item not in task_scheduling_create | map(attribute='name')
 
 - name: Configure scheduled tasks - disabled
+  no_log: "{{ true if item.password is defined else false }}"
   community.windows.win_scheduled_task:
     name: "{{ item.name }}"
     enabled: false
@@ -49,6 +50,7 @@
     label: "{{ item.name }}"
 
 - name: Configure scheduled tasks - enabled
+  no_log: "{{ true if item.password is defined else false }}"
   community.windows.win_scheduled_task:
     name: "{{ item.name }}"
     enabled: true

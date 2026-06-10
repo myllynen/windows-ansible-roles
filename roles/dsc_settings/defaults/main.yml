@@ -30,13 +30,22 @@ dsc_settings:
 #      Ensure: Present
 #    reboot: true
 #
+#  - setting: Set Windows Crash Dump level
+#    resource_name: Registry
+#    parameters:
+#      Key: HKLM:\SYSTEM\CurrentControlSet\Control\CrashControl
+#      ValueName: CrashDumpEnabled
+#      ValueType: DWord
+#      ValueData: 3
+#      Ensure: Present
+#
 #  - setting: Set WER local crash dump folder
 #    resource_name: Registry
 #    parameters:
 #      Key: HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps
 #      ValueName: DumpFolder
 #      ValueType: ExpandString
-#      ValueData: '%LOCALAPPDATA%\CrashDumps'
+#      ValueData: 'C:\CrashDumps'
 #      Ensure: Present
 #
 #  - setting: Set WER local crash dump count

@@ -22,7 +22,7 @@ audit_configuration_rules_remove:
 # List of audit rules to create
 # Uses ansible.windows.win_audit_rule module
 audit_configuration_rules_create:
-#  - path: HKLM:\Software
+#  - path: HKLM:\SOFTWARE
 #    user: BUILTIN\Users
 #    rights:
 #      - delete

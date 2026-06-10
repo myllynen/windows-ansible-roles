@@ -6,4 +6,4 @@
 
 # NB. reset_connection does not support when
 - name: Reset connection to use PATH changes
-  meta: reset_connection
+  ansible.builtin.meta: reset_connection

@@ -25,6 +25,8 @@
     - "'was installed' in choco_install.warnings[0]"
 
 - name: Configure Chocolatey - source
+  no_log: "{{ true if item.source_password is defined or
+                      item.certificate_password is defined else false }}"
   chocolatey.chocolatey.win_chocolatey_source:
     name: "{{ item.name }}"
     state: "{{ item.state | default(omit) }}"
