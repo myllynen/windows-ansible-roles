@@ -9,8 +9,8 @@
   ansible.windows.win_powershell:
     error_action: stop
     script: |
-      wevtutil.exe el | % {
-        try { wevtutil.exe cl $_ }
-        catch {}
+      $session = New-Object System.Diagnostics.Eventing.Reader.EventLogSession
+      foreach ($log in $session.GetLogNames()) {
+        try { $session.ClearLog($log) } catch { }
       }
   when: disk_cleanup_event_logs | bool
