@@ -1,32 +1,8 @@
 ---
-- name: Check connecting user
-  vars:
-    win_conn_user: "{{ 'ansible_' + ansible_connection + '_user' }}"
-    win_remote_user: "{{ lookup('vars', win_conn_user, default='') | default(ansible_user, true) }}"
-  ansible.builtin.set_fact:
-    win_become_user: "{{ ansible_become_user | default(win_remote_user, true) | default(lookup('env', 'USER'), true) }}"
-  when: sshd_configuration_install | bool
-
 - name: Install OpenSSH.Server capability
-  become: true
-  become_user: "{{ win_become_user }}"
-  check_mode: false
-  ansible.windows.win_powershell:
-    error_action: stop
-    script: |
-      $Ansible.Changed = $false
-      $missing = Get-WindowsCapability -Name 'OpenSSH.Server*' -Online | ? State -ne 'Installed'
-      if ($missing) {
-        $Ansible.Changed = $true
-        if ('{{ ansible_check_mode }}' -eq 'true') { Exit 0 }
-        $result = Add-WindowsCapability -Name $missing.Name -Online
-        if ((Get-WindowsCapability -Name $missing.Name -Online | ? State -ne 'Installed')) {
-          $Ansible.Result = "Failed to install OpenSSH.Server capability: $result"
-          $Ansible.Failed = $true
-          Exit 1
-        }
-      }
-  when: sshd_configuration_install | bool
+  ansible.windows.win_capability:
+    name: OpenSSH.Server
+    state: present
 
 - name: Configure sshd default shell
   ansible.windows.win_regedit:
@@ -67,8 +43,8 @@
 - name: Configure administrators SSH key file
   vars:
     keys: "{{ sshd_configuration_admins_keys }}"
-    keys_del: "{{ ['absent'] | product(keys.absent | select) }}"
-    keys_add: "{{ ['present'] | product(keys.present | select) }}"
+    keys_del: "{{ ['absent'] | product(keys.absent | default([]) | select) }}"
+    keys_add: "{{ ['present'] | product(keys.present | default([]) | select) }}"
   community.windows.win_lineinfile:
     path: C:\ProgramData\ssh\administrators_authorized_keys
     line: "{{ item.1 }}"

@@ -2,13 +2,6 @@
 # Enable or disable sshd
 sshd_configuration_enable: true
 
-# Install OpenSSH.Server capability if needed
-# Skipping this will speedup the role a little
-# if sshd is already installed but the role is
-# going to fail in case sshd is not installed.
-# This is not needed with Windows Server 2025.
-sshd_configuration_install: false
-
 # sshd service start mode: auto or delayed
 sshd_configuration_start_mode: auto
 
@@ -28,7 +21,6 @@ sshd_configuration_admins_keys:
 
 # Firewall profiles to apply rules
 sshd_configuration_firewall_profiles:
-  - domain
   - private
 
 # Enable sshd_config validation using a copy if
