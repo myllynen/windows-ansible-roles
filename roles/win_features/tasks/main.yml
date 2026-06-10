@@ -1,0 +1,52 @@
+---
+- name: Remove unwanted Windows features
+  vars:
+    feature_removals: "{{ win_features_remove | select }}"
+    feature_installs: "{{ win_features_install | select('string') +
+                             win_features_install | map(attribute='name', default='') | select }}"
+  ansible.windows.win_feature:
+    name: "{{ item }}"
+    state: absent
+  register: removed_features
+  failed_when:
+    - removed_features.msg is defined
+    - not win_features_remove_ignore_unknown | bool or
+      'name is not valid' not in removed_features.msg
+  loop: "{{ feature_removals | reject('in', feature_installs) }}"
+
+- name: Reboot system
+  vars:
+    reboot_needed: "{{ removed_features.results
+                       | selectattr('reboot_required', 'defined')
+                       | selectattr('reboot_required', 'equalto', true) | length > 0 }}"
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after removing features"
+  when:
+    - win_features_reboot | bool
+    - removed_features is changed
+    - reboot_needed
+
+- name: Install wanted Windows features
+  ansible.windows.win_feature:
+    name: "{{ item if item is string else item.name }}"
+    source: "{{ item.source | default(omit) }}"
+    include_sub_features: "{{ item.include_sub_features | default(omit) }}"
+    include_management_tools: "{{ item.include_management_tools | default(omit) }}"
+    state: present
+  register: installed_features
+  loop: "{{ win_features_install | select }}"
+  loop_control:
+    label: "{{ item if item is string else item.name }}"
+
+- name: Reboot system
+  vars:
+    reboot_needed: "{{ installed_features.results
+                       | selectattr('reboot_required', 'equalto', true) | length > 0 }}"
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after installing features"
+  when:
+    - win_features_reboot | bool
+    - installed_features is changed
+    - reboot_needed

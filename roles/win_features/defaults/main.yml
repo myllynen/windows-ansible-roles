@@ -1,0 +1,23 @@
+---
+# See also win_capabilities and win_optional_features
+
+# Windows features to remove
+win_features_remove:
+#  - System-DataArchiver
+#  - Telnet-Client
+#  - WindowsAdminCenterSetup
+#  - Wireless-Networking
+
+# Ignore failures to remove unknown features
+win_features_remove_ignore_unknown: true
+
+# Windows features to install
+win_features_install:
+#  - WoW64-Support
+#  - name: Web-Server
+#    source: D:\Sources
+#    include_sub_features: true
+#    include_management_tools: true
+
+# Reboot if needed after changes
+win_features_reboot: true
