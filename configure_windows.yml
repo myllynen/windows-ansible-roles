@@ -28,7 +28,7 @@
     ansible_psrp_auth: ntlm
     ansible_psrp_message_encryption: always
     ansible_psrp_cert_validation: ignore
-    ansible_psrp_no_profile: false
+    ansible_psrp_no_profile: true
 
     ansible_psrp_user: Administrator
     ansible_winrm_password: Foobar_12
@@ -51,7 +51,7 @@
     # accounts_local
     #
     # Enable or disable built-in Administrator
-    accounts_local_administrator_enable: true
+    accounts_local_administrator_enable: false
 
     # Enable or disable Ansible user password expiration
     accounts_local_ansible_user_password_expires: false
@@ -152,7 +152,7 @@
     # List of audit rules to create
     # Uses ansible.windows.win_audit_rule module
     audit_configuration_rules_create:
-    #  - path: HKLM:\Software
+    #  - path: HKLM:\SOFTWARE
     #    user: BUILTIN\Users
     #    rights:
     #      - delete
@@ -233,13 +233,22 @@
     #      Ensure: Present
     #    reboot: true
     #
+    #  - setting: Set Windows Crash Dump level
+    #    resource_name: Registry
+    #    parameters:
+    #      Key: HKLM:\SYSTEM\CurrentControlSet\Control\CrashControl
+    #      ValueName: CrashDumpEnabled
+    #      ValueType: DWord
+    #      ValueData: 3
+    #      Ensure: Present
+    #
     #  - setting: Set WER local crash dump folder
     #    resource_name: Registry
     #    parameters:
     #      Key: HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps
     #      ValueName: DumpFolder
     #      ValueType: ExpandString
-    #      ValueData: '%LOCALAPPDATA%\CrashDumps'
+    #      ValueData: 'C:\CrashDumps'
     #      Ensure: Present
     #
     #  - setting: Set WER local crash dump count
@@ -567,11 +576,17 @@
     #    data: 1
     #    reboot: true
     #
+    #  - setting: Set Windows Crash Dump level
+    #    path: HKLM:\SYSTEM\CurrentControlSet\Control\CrashControl
+    #    name: CrashDumpEnabled
+    #    type: DWord
+    #    data: 3
+    #
     #  - setting: Set WER local crash dump folder
     #    path: HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps
     #    name: DumpFolder
     #    type: ExpandString
-    #    data: '%LOCALAPPDATA%\CrashDumps'
+    #    data: 'C:\CrashDumps'
     #
     #  - setting: Set WER local crash dump count
     #    path: HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps
@@ -646,13 +661,6 @@
     # Enable or disable sshd
     sshd_configuration_enable: true
 
-    # Install OpenSSH.Server capability if needed
-    # Skipping this will speedup the role a little
-    # if sshd is already installed but the role is
-    # going to fail in case sshd is not installed.
-    # This is not needed with Windows Server 2025.
-    sshd_configuration_install: false
-
     # sshd service start mode: auto or delayed
     sshd_configuration_start_mode: auto
 
@@ -674,7 +682,6 @@
     sshd_configuration_firewall_profiles:
       - domain
       - private
-      - public
 
     # Enable sshd_config validation using a copy if
     # the file is about to be updated. Recommended.
@@ -787,26 +794,31 @@
     # Retry attempts and delay between retries
     # for applying updates in case of failures
     system_update_retry_count: 3
-    system_update_retry_delay: 30
+    system_update_retry_delay: 300
 
     # Retry applying updates also if updates were
     # installed, subject to the above retry count
     system_update_retry_after_install: true
 
-    # Parameters for win_updates
+    # Parameters for ansible.windows.win_updates module
     system_update_categories: '*'
     system_update_accept_list: []
     system_update_reject_list: []
-    system_update_skip_optional: true
+    system_update_skip_optional: false
     system_update_state: installed
+
+    # Use scheduled background task or become SYSTEM
+    # The module default is to use a scheduled task
+    system_update_background_task: true
 
     # Display update results, full or compact
     system_update_display_results: true
-    system_update_display_results_full: true
+    system_update_display_results_full: false
 
-    # Reboot if needed after updates
+    # Reboot after updates, if needed or always
     system_update_reboot: true
-    system_update_reboot_timeout: 1200
+    system_update_reboot_always: false
+    system_update_reboot_timeout: 1800
 
     # Compile all installed assemblies
     # This will happen only after updates
@@ -815,7 +827,7 @@
     # Trigger compilation only when updates with
     # the following description were part of the
     # installed updates. Use '.*' for everything.
-    system_update_compile_filter: Cumulative Update
+    system_update_compile_filter: '(Cumulative Update|NET Framework)'
 
     #
     # task_scheduling
@@ -875,6 +887,67 @@
     #    data: 0
 
     #
+    # win_capabilities - see role description for examples
+    #
+    # Windows capabilities to remove
+    #win_capabilities_remove:
+    #  -
+
+    # Ignore failures to remove unknown capabilities
+    win_capabilities_remove_ignore_unknown: true
+
+    # Windows capabilities to install
+    #win_capabilities_install:
+    #  -
+
+    # Reboot if needed after changes
+    win_capabilities_reboot: true
+
+    # Empty/unset uses the default DISM log
+    win_capabilities_log_path:
+
+    # DISM logging level
+    # 0 - logs errors only
+    # 1 - logs errors and warnings
+    # 2 - logs errors, warnings, and information
+    # 3 - logs all of the previous plus debug output
+    win_capabilities_log_level: 1
+
+    #
+    # win_features - see role description for examples
+    #
+    # Windows features to remove
+    #win_features_remove:
+    #  -
+
+    # Ignore failures to remove unknown features
+    win_features_remove_ignore_unknown: true
+
+    # Windows features to install
+    #win_features_install:
+    #  -
+
+    # Reboot if needed after changes
+    win_features_reboot: true
+
+    #
+    # win_optional_features - see role description for examples
+    #
+    # Windows optional features to remove
+    #win_optional_features_remove:
+    #  -
+
+    # Ignore failures to remove unknown optional features
+    win_optional_features_remove_ignore_unknown: true
+
+    # Windows optional features to install
+    #win_optional_features_install:
+    #  -
+
+    # Reboot if needed after changes
+    win_optional_features_reboot: true
+
+    #
     # windows_recovery
     #
     # Enable or disable Windows Recovery Environment
@@ -912,10 +985,10 @@
       IPv6Filter: '*'
 
     # Firewall profiles to apply rules
+    # https://github.com/ansible-collections/community.windows/issues/19
     winrm_configuration_firewall_profiles:
       - domain
       - private
-      - public
 
     # Optionally display current configuration
     winrm_configuration_display_config: false
@@ -983,8 +1056,11 @@
     - winrm_configuration
     - sshd_configuration
     - rdp_configuration
-    #- wsl_configuration
     #- windows_recovery
+    - win_features
+    - win_capabilities
+    - win_optional_features
+    #- wsl_configuration
     - dsc_settings
     - dsc3_settings
     - registry_settings
