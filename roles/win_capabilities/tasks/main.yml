@@ -1,0 +1,58 @@
+---
+- name: Remove unwanted Windows capabilities
+  vars:
+    capability_removals: "{{ win_capabilities_remove | select }}"
+    capability_installs: "{{ win_capabilities_install | select('string') +
+                             win_capabilities_install | map(attribute='name', default='') | select }}"
+  ansible.windows.win_capability:
+    name: "{{ item }}"
+    log_path: "{{ win_capabilities_log_path | default(omit, true) }}"
+    log_level: "{{ win_capabilities_log_level | default(omit, true) }}"
+    disable_windows_update: true
+    state: absent
+  register: removed_capabilities
+  failed_when:
+    - removed_capabilities.msg is defined
+    - not win_capabilities_remove_ignore_unknown | bool or
+      ('Failed to find' not in removed_capabilities.msg and
+       'Cannot validate argument' not in removed_capabilities.msg and
+       'Element not found' not in removed_capabilities.msg)
+  loop: "{{ capability_removals | reject('in', capability_installs) }}"
+
+- name: Reboot system
+  vars:
+    reboot_needed: "{{ removed_capabilities.results
+                       | selectattr('reboot_required', 'defined')
+                       | selectattr('reboot_required', 'equalto', true) | length > 0 }}"
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after removing capabilities"
+  when:
+    - win_capabilities_reboot | bool
+    - removed_capabilities is changed
+    - reboot_needed
+
+- name: Install wanted Windows capabilities
+  ansible.windows.win_capability:
+    name: "{{ item if item is string else item.name }}"
+    source: "{{ item.source | default(omit) }}"
+    log_path: "{{ win_capabilities_log_path | default(omit, true) }}"
+    log_level: "{{ win_capabilities_log_level | default(omit, true) }}"
+    disable_windows_update: "{{ item.disable_windows_update | default(omit) }}"
+    state: present
+  register: installed_capabilities
+  loop: "{{ win_capabilities_install | select }}"
+  loop_control:
+    label: "{{ item if item is string else item.name }}"
+
+- name: Reboot system
+  vars:
+    reboot_needed: "{{ installed_capabilities.results
+                       | selectattr('reboot_required', 'equalto', true) | length > 0 }}"
+  ansible.windows.win_reboot:
+    reboot_timeout: 600
+    msg: "Ansible reboot after installing capabilities"
+  when:
+    - win_capabilities_reboot | bool
+    - installed_capabilities is changed
+    - reboot_needed
