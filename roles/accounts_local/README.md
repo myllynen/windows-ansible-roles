@@ -11,7 +11,7 @@ Below are the role default values from defaults/main.yml:
 <pre>
 ---
 # Enable or disable built-in Administrator
-accounts_local_administrator_enable: true
+accounts_local_administrator_enable: false
 
 # Enable or disable Ansible user password expiration
 accounts_local_ansible_user_password_expires: false
