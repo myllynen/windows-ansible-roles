@@ -46,7 +46,7 @@ system_update_compile_assemblies: true
 # Trigger compilation only when updates with
 # the following description were part of the
 # installed updates. Use '.*' for everything.
-system_update_compile_filter: '(Cumulative Update|NET Framework)'
+system_update_compile_filter: '(Cumulative Update|NET)'
 </pre>
 
 ## License
