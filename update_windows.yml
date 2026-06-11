@@ -48,6 +48,15 @@
     #ansible_become_user: Administrator
 
     #
+    # disk_cleanup
+    #
+    # Remove older versions of Windows Update files
+    disk_cleanup_windows_update_files: true
+
+    # Also remove files needed to uninstall updates
+    disk_cleanup_windows_update_reset: false
+
+    #
     # dotnet_optimize
     #
     # Compile PowerShell assemblies
@@ -62,7 +71,7 @@
     #
     # Retry attempts and delay between retries
     # for applying updates in case of failures
-    system_update_retry_count: 3
+    system_update_retry_count: 5
     system_update_retry_delay: 300
 
     # Retry applying updates also if updates were
@@ -101,3 +110,4 @@
   roles:
     - dotnet_optimize
     - system_update
+    - disk_cleanup
