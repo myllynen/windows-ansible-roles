@@ -87,9 +87,9 @@
     wake_to_run: "{{ item.wake_to_run | default(omit) }}"
     state: present
   loop: "{{ (task_scheduling_create
-            | selectattr('enabled', 'undefined'))
+             | selectattr('enabled', 'undefined'))
             + (task_scheduling_create
-              | selectattr('enabled', 'defined')
-              | rejectattr('enabled', 'equalto', false)) }}"
+               | selectattr('enabled', 'defined')
+               | rejectattr('enabled', 'equalto', false)) }}"
   loop_control:
     label: "{{ item.name }}"

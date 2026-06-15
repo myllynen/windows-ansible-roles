@@ -216,13 +216,13 @@
     services_to_restart: >
       {{
         (service_management_enable
-        | selectattr('state', 'defined')
-        | selectattr('state', 'equalto', 'restarted'))
+         | selectattr('state', 'defined')
+         | selectattr('state', 'equalto', 'restarted'))
         + (service_management_enable
-          | selectattr('restart_configured', 'defined')
-          | selectattr('restart_configured', 'equalto', true)
-          | selectattr('name', 'in', changed_services)
-          | rejectattr('name', 'in', changed_started))
+           | selectattr('restart_configured', 'defined')
+           | selectattr('restart_configured', 'equalto', true)
+           | selectattr('name', 'in', changed_services)
+           | rejectattr('name', 'in', changed_started))
       }}
   ansible.windows.win_service:
     name: "{{ item.name }}"

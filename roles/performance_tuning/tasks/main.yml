@@ -69,7 +69,7 @@
 - name: Configure power scheme
   vars:
     current_name: "{{ (((power_scheme_info.stdout_lines | select('search', '\\*$'))[0] | split('('))[1]
-                        | replace(' ', '_'))[:-3] | lower }}"
+                       | replace(' ', '_'))[:-3] | lower }}"
     current_guid: "{{ ((power_scheme_info.stdout_lines | select('search', '\\*$'))[0] | split(' '))[3] }}"
     wanted_name: "{{ power_scheme | replace('_', ' ') }}"
     wanted_guid: "{{ ((power_scheme_info.stdout_lines
