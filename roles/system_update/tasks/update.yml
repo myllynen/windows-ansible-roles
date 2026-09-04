@@ -11,6 +11,7 @@
     accept_list: "{{ system_update_accept_list | default(omit, true) }}"
     reject_list: "{{ system_update_reject_list | default(omit, true) }}"
     skip_optional: "{{ system_update_skip_optional | bool }}"
+    log_path: "{{ system_update_log_path | default(omit, true) }}"
     state: "{{ system_update_state }}"
     reboot: false
   register: update_result

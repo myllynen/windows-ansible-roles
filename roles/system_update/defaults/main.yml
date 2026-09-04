@@ -14,6 +14,7 @@ system_update_accept_list: []
 system_update_reject_list: []
 system_update_skip_optional: false
 system_update_state: installed
+#system_update_log_path: C:\logs\update_log.txt
 
 # Use scheduled background task or become SYSTEM
 # The module default is to use a scheduled task
